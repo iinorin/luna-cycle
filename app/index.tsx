@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+
 import { DEFAULT_CYCLE_STATE } from "../src/cycle/state";
 import { PHASE_META } from "../src/cycle/meta";
 import { getDailyMessageForPhase } from "../src/messages/selector";
@@ -9,7 +10,7 @@ export default function HomeScreen() {
   const message = getDailyMessageForPhase(phase);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: meta.color }]}>
       <View style={styles.card}>
         <Text style={styles.emoji}>{meta.emoji}</Text>
         <Text style={styles.phase}>{meta.label}</Text>
@@ -22,30 +23,29 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a",
     justifyContent: "center",
     alignItems: "center",
   },
   card: {
-    backgroundColor: "#1e293b",
-    borderRadius: 20,
     padding: 24,
+    borderRadius: 16,
+    backgroundColor: "#fff",
     width: "85%",
     alignItems: "center",
+    elevation: 4,
   },
   emoji: {
-    fontSize: 42,
-    marginBottom: 8,
+    fontSize: 48,
+    marginBottom: 12,
   },
   phase: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
-    color: "#e5e7eb",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   message: {
     fontSize: 16,
-    color: "#cbd5f5",
     textAlign: "center",
+    color: "#444",
   },
 });
