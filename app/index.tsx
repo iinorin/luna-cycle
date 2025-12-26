@@ -5,22 +5,20 @@ import { PHASE_META } from "../src/cycle/meta";
 import { getDailyMessageForPhase } from "../src/messages/selector";
 import { CycleRing } from "../src/components/CycleRing";
 
-
 export default function HomeScreen() {
   const phase = DEFAULT_CYCLE_STATE.currentPhase;
   const meta = PHASE_META[phase];
   const message = getDailyMessageForPhase(phase);
-  const daysLeft = 3;
 
-return (
-  <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-    <Text style={{ fontSize: 22, marginBottom: 20 }}>
-      🌙 Luna Cycle
-    </Text>
+  return (
+    <View style={styles.container}>
+      <Text style={{ fontSize: 22, marginBottom: 20 }}>
+        🌙 Luna Cycle
+      </Text>
 
-    <CycleRing daysLeft={3} />
-  </View>
-);
+      <CycleRing />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
