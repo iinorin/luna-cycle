@@ -1,52 +1,39 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 
-import { DEFAULT_CYCLE_STATE } from "../src/cycle/state";
-import { PHASE_META } from "../src/cycle/meta";
-import { getDailyMessageForPhase } from "../src/messages/selector";
+import { DEFAULT_CYCLE_STATE, calculateCyclePhase } from "../src/cycle/state";
 import { CycleRing } from "../src/components/CycleRing";
+import { ScreenBackground } from "../src/components/ScreenBackground";
+import { HeaderCard } from "../src/components/HeaderCard";
 
 export default function HomeScreen() {
-  const phase = DEFAULT_CYCLE_STATE.currentPhase;
-  const meta = PHASE_META[phase];
-  const message = getDailyMessageForPhase(phase);
+  const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
+  const currentDay = 12; // temp
 
   return (
-    <View style={styles.container}>
-      <Text style={{ fontSize: 22, marginBottom: 20 }}>
-        🌙 Luna Cycle
-      </Text>
+    <ScreenBackground>
+      <View style={styles.container}>
+        <HeaderCard />
 
-      <CycleRing />
-    </View>
+        <CycleRing
+          cycleLength={cycleLength}
+          currentDay={currentDay}
+          phaseByDay={() =>
+            calculateCyclePhase(
+              DEFAULT_CYCLE_STATE.lastPeriodStart,
+              DEFAULT_CYCLE_STATE.cycleLength,
+              DEFAULT_CYCLE_STATE.periodLength
+            )
+          }
+        />
+      </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-  },
-  card: {
-    padding: 24,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-    width: "85%",
-    alignItems: "center",
-    elevation: 4,
-  },
-  emoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  phase: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#444",
   },
 });
