@@ -1,4 +1,5 @@
-export type MessagePreset = {
-  motivational: string[];
-  reminders: string[];
+import { CyclePhase } from "../cycle/state";
+
+export type PhaseMessages = {
+  [key in CyclePhase]: string[];
 };

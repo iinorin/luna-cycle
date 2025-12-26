@@ -1,14 +1,24 @@
-import { MessagePreset } from "./types";
+import { PhaseMessages } from "./types";
 
-export const MESSAGES: MessagePreset = {
-  motivational: [
-    "You're doing amazing 💙",
-    "Your body is working hard for you 🌸",
-    "Rest. Breathe. You're okay."
+export const MESSAGES: PhaseMessages = {
+  menstrual: [
+    "It's okay to slow down 💗",
+    "Your body is healing — be gentle 🌙",
+    "Rest is productive too 🛌",
   ],
-  reminders: [
-    "Drink some water 💧",
-    "Time to take a short walk 🚶‍♀️",
-    "Gentle stretches can help 🧘‍♀️"
-  ]
+  follicular: [
+    "New energy is coming 🌱",
+    "You’re rebuilding strength 💫",
+    "Great time to start fresh ✨",
+  ],
+  ovulation: [
+    "You’re glowing 🌸",
+    "Confidence looks good on you 💃",
+    "Connect, express, shine ✨",
+  ],
+  luteal: [
+    "It's okay to say no 🌙",
+    "Listen to your body 🤍",
+    "Preparation is power 🔮",
+  ],
 };
