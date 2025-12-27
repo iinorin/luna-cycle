@@ -1,8 +1,21 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 
 export function HeaderCard() {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.card}>
+      {/* Hamburger menu */}
+      <Pressable
+        style={styles.menuBtn}
+        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+      >
+        <Ionicons name="menu" size={26} color="#fff" />
+      </Pressable>
+
       <Text style={styles.title}>Luna Cycle</Text>
       <Text style={styles.subtitle}>
         Track your cycle • Understand your body
@@ -17,19 +30,23 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     paddingHorizontal: 24,
     borderRadius: 22,
-    width: "90%",
-    alignItems: "center",
-    marginBottom: 32,
-    elevation: 4,
+  },
+  menuBtn: {
+    position: "absolute",
+    top: 18,
+    left: 18,
+    zIndex: 10,
   },
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#fff",
+    textAlign: "center",
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
     color: "#EFFFFC",
+    textAlign: "center",
   },
 });

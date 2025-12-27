@@ -1,9 +1,9 @@
 import { View, StyleSheet } from "react-native";
 
-import { DEFAULT_CYCLE_STATE } from "../src/cycle/state";
-import { CycleRing } from "../src/components/CycleRing";
-import { ScreenBackground } from "../src/components/ScreenBackground";
-import { HeaderCard } from "../src/components/HeaderCard";
+import { DEFAULT_CYCLE_STATE } from "../../../src/cycle/state";
+import { CycleRing } from "../../../src/components/CycleRing";
+import { ScreenBackground } from "../../../src/components/ScreenBackground";
+import { HeaderCard } from "../../../src/components/HeaderCard";
 
 export default function HomeScreen() {
   return (
