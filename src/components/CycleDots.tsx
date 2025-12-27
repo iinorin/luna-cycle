@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { View, Animated } from "react-native";
+import { useEffect, useRef } from "react";
 import { CyclePhase } from "../cycle/types";
 import { PHASE_COLORS } from "../cycle/colors";
 
@@ -8,9 +9,30 @@ type Props = {
   size?: number;
 };
 
-export function CycleDot({ phase, isActive, size = 14 }: Props) {
+export function CycleDot({ phase, isActive, size = 16 }: Props) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isActive) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, {
+            toValue: 1.4,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isActive]);
+
   return (
-    <View
+    <Animated.View
       style={{
         width: size,
         height: size,
@@ -18,6 +40,7 @@ export function CycleDot({ phase, isActive, size = 14 }: Props) {
         backgroundColor: PHASE_COLORS[phase],
         borderWidth: isActive ? 2 : 0,
         borderColor: "#fff",
+        transform: [{ scale }],
       }}
     />
   );

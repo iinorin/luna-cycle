@@ -1,13 +1,9 @@
 import { CyclePhase } from "./types";
 
 export const PHASE_COLORS: Record<CyclePhase, string> = {
-  menstrual: "#FF5C8A",   // Period
-  follicular: "#FFD166", // Safe / growing
-  ovulation: "#06D6A0",  // Fertile
-  luteal: "#8E9AAF",     // Post-ovulation
-  safe: "#CDB4DB",       // General safe days
+  menstrual: "#ff4d6d",
+  follicular: "#ffb703",
+  ovulation: "#6ae3c1",
+  luteal: "#7b6cff",
+  safe: "#3a86ff",
 };
-
-export function getPhaseColor(phase: CyclePhase): string {
-  return PHASE_COLORS[phase];
-}
