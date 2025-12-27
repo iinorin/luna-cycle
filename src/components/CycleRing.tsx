@@ -1,57 +1,63 @@
 import { View, StyleSheet } from "react-native";
-import { CyclePhase } from "../cycle/types";
+import { PHASE_COLORS } from "../cycle/colors";
+import { DEFAULT_CYCLE_STATE } from "../cycle/state";
+import { calculateCyclePhase } from "../cycle/state";
 
-type CycleRingProps = {
-  cycleLength: number;
-  currentDay: number; // 1-based
-  phaseByDay: (day: number) => CyclePhase;
+type Props = {
+  size?: number;
 };
 
-const PHASE_COLORS: Record<CyclePhase, string> = {
-  menstrual: "#FF6B6B",
-  follicular: "#4D96FF",
-  ovulation: "#4CAF50",
-  luteal: "#FBC02D",
-};
+export function CycleRing({ size = 220 }: Props) {
+  const radius = size / 2;
+  const dotSize = 8;
+  const totalDays = DEFAULT_CYCLE_STATE.cycleLength;
 
-export function CycleRing({
-  cycleLength,
-  currentDay,
-  phaseByDay,
-}: CycleRingProps) {
-  const size = 260;
-  const radius = 110;
-  const center = size / 2;
+  const today = new Date();
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      {Array.from({ length: cycleLength }).map((_, index) => {
-        const day = index + 1;
-        const angle = (2 * Math.PI * index) / cycleLength;
+      {Array.from({ length: totalDays }).map((_, index) => {
+        const angle = (2 * Math.PI * index) / totalDays;
 
-        const x = center + radius * Math.cos(angle);
-        const y = center + radius * Math.sin(angle);
+        const x =
+          radius +
+          (radius - 16) * Math.cos(angle) -
+          dotSize / 2;
 
-        const phase = phaseByDay(day);
-        const isToday = day === currentDay;
+        const y =
+          radius +
+          (radius - 16) * Math.sin(angle) -
+          dotSize / 2;
 
-        const dotSize = isToday ? 14 : 8;
+        // Day number in cycle
+        const dayNumber = index + 1;
+
+        // Fake date for phase calculation
+        const fakeDate = new Date(
+          new Date(DEFAULT_CYCLE_STATE.lastPeriodStart).getTime() +
+            index * 24 * 60 * 60 * 1000
+        );
+
+        const phase = calculateCyclePhase(
+          fakeDate.toISOString().slice(0, 10),
+          DEFAULT_CYCLE_STATE.cycleLength,
+          DEFAULT_CYCLE_STATE.periodLength
+        );
+
+        const isToday =
+          today.toDateString() === fakeDate.toDateString();
 
         return (
           <View
-            key={day}
+            key={index}
             style={[
               styles.dot,
               {
+                left: x,
+                top: y,
                 backgroundColor: PHASE_COLORS[phase],
-                width: dotSize,
-                height: dotSize,
-                borderRadius: dotSize / 2,
-                opacity: isToday ? 1 : 0.45,
-                transform: [
-                  { translateX: x - dotSize / 2 },
-                  { translateY: y - dotSize / 2 },
-                ],
+                opacity: isToday ? 1 : 0.5,
+                transform: [{ scale: isToday ? 1.4 : 1 }],
               },
             ]}
           />
@@ -67,5 +73,8 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: "absolute",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });
