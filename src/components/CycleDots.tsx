@@ -1,50 +1,49 @@
-import { View } from "react-native";
-
-type Dot = {
-  color: string;
-  isActive?: boolean;
-};
+import { Animated, Pressable } from "react-native";
+import { useEffect, useRef } from "react";
+import { getPhaseColor } from "../cycle/colors";
+import { CyclePhase } from "../cycle/types";
 
 type Props = {
-  dots: Dot[];
+  index: number;
+  angle: number;
+  phase: CyclePhase;
+  isActive: boolean;
+  onPress: () => void;
 };
 
-export function CycleDots({ dots }: Props) {
-  const radius = 120;
-  const dotSize = 10;
+export function CycleDot({ index, angle, phase, isActive, onPress }: Props) {
+  const scale = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 5,
+    }).start();
+  }, [phase]);
 
   return (
-    <View
+    <Animated.View
       style={{
-        width: radius * 2,
-        height: radius * 2,
-        position: "relative",
+        position: "absolute",
+        transform: [
+          { rotate: `${angle}deg` },
+          { translateY: -120 },
+          { scale },
+        ],
       }}
     >
-      {dots.map((dot, index) => {
-        const angle = (2 * Math.PI * index) / dots.length;
-
-        const x =
-          radius + radius * Math.cos(angle) - dotSize / 2;
-        const y =
-          radius + radius * Math.sin(angle) - dotSize / 2;
-
-        return (
-          <View
-            key={index}
-            style={{
-              position: "absolute",
-              width: dotSize,
-              height: dotSize,
-              borderRadius: dotSize / 2,
-              backgroundColor: dot.color,
-              left: x,
-              top: y,
-              opacity: dot.isActive ? 1 : 0.5,
-            }}
-          />
-        );
-      })}
-    </View>
+      <Pressable onPress={onPress}>
+        <Animated.View
+          style={{
+            width: isActive ? 10 : 8,
+            height: isActive ? 10 : 8,
+            borderRadius: 5,
+            backgroundColor: getPhaseColor(phase),
+            opacity: isActive ? 1 : 0.6,
+          }}
+        />
+      </Pressable>
+    </Animated.View>
   );
 }

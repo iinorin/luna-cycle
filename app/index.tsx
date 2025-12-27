@@ -1,15 +1,25 @@
 import { View, StyleSheet } from "react-native";
-
+import { DEFAULT_CYCLE_STATE, getPhaseForDay } from "../src/cycle/state";
+import { CycleRing } from "../src/components/CycleRing";
 import { ScreenBackground } from "../src/components/ScreenBackground";
 import { HeaderCard } from "../src/components/HeaderCard";
-import { CycleRing } from "../src/components/CycleRing";
 
 export default function HomeScreen() {
   return (
     <ScreenBackground>
       <View style={styles.container}>
         <HeaderCard />
-        <CycleRing />
+
+        <CycleRing
+          cycleLength={DEFAULT_CYCLE_STATE.cycleLength}
+          currentDay={12}
+          phaseByDay={(day) =>
+            getPhaseForDay(
+              day,
+              DEFAULT_CYCLE_STATE.periodLength
+            )
+          }
+        />
       </View>
     </ScreenBackground>
   );

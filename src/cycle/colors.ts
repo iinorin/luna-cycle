@@ -7,3 +7,7 @@ export const PHASE_COLORS: Record<CyclePhase, string> = {
   luteal: "#8E9AAF",     // Post-ovulation
   safe: "#CDB4DB",       // General safe days
 };
+
+export function getPhaseColor(phase: CyclePhase): string {
+  return PHASE_COLORS[phase];
+}
