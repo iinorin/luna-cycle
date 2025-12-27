@@ -55,10 +55,7 @@ export function CycleRing({
             key={i}
             style={[
               styles.dotWrapper,
-              {
-                left: x,
-                top: y,
-              },
+              { left: x, top: y },
             ]}
             onTouchEnd={() => setSelectedDay(day)}
           >

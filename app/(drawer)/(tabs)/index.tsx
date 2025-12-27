@@ -1,30 +1,43 @@
 import { View, StyleSheet } from "react-native";
+import { HeaderCard } from "@/src/components/HeaderCard";
+import { CycleRing } from "@/src/components/CycleRing";
 
-import { DEFAULT_CYCLE_STATE } from "../../../src/cycle/state";
-import { CycleRing } from "../../../src/components/CycleRing";
-import { ScreenBackground } from "../../../src/components/ScreenBackground";
-import { HeaderCard } from "../../../src/components/HeaderCard";
+import {
+  DEFAULT_CYCLE_STATE,
+  getCurrentCycleDay,
+  getPhaseForDay,
+} from "@/src/cycle/state";
 
 export default function HomeScreen() {
-  return (
-    <ScreenBackground>
-      <View style={styles.container}>
-        <HeaderCard />
+  const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
+  const periodLength = DEFAULT_CYCLE_STATE.periodLength;
 
+  const currentDay = getCurrentCycleDay(DEFAULT_CYCLE_STATE);
+  const currentPhase = getPhaseForDay(currentDay, periodLength);
+
+  return (
+    <View style={styles.container}>
+      <HeaderCard phase={currentPhase} />
+
+      <View style={styles.center}>
         <CycleRing
-          cycleLength={DEFAULT_CYCLE_STATE.cycleLength}
-          periodLength={DEFAULT_CYCLE_STATE.periodLength}
-          currentDay={12} // temp for now
+          cycleLength={cycleLength}
+          periodLength={periodLength}
+          currentDay={currentDay}
         />
       </View>
-    </ScreenBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    backgroundColor: "#0F172A",
+  },
+  center: {
+    flex: 1,
     justifyContent: "center",
+    alignItems: "center",
   },
 });

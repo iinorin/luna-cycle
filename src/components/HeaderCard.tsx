@@ -1,52 +1,99 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import { DrawerActions } from "@react-navigation/native";
+import { useEffect, useRef } from "react";
 
-export function HeaderCard() {
+export function HeaderCard({ phase = "LUTEAL PHASE" }) {
   const navigation = useNavigation();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
-    <View style={styles.card}>
-      {/* Hamburger menu */}
+    <Animated.View
+      style={[
+        styles.header,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
+      {/* Hamburger */}
       <Pressable
         style={styles.menuBtn}
-        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        onPress={() => navigation.dispatch({ type: "OPEN_DRAWER" })}
       >
         <Ionicons name="menu" size={26} color="#fff" />
       </Pressable>
 
-      <Text style={styles.title}>Luna Cycle</Text>
-      <Text style={styles.subtitle}>
-        Track your cycle • Understand your body
-      </Text>
-    </View>
+      {/* Title */}
+      <View style={styles.titleWrapper}>
+        <Text style={styles.title}>Luna Cycle</Text>
+        <Text style={styles.phase}>{phase}</Text>
+        <View style={styles.indicator} />
+      </View>
+
+      {/* Spacer to keep title centered */}
+      <View style={{ width: 40 }} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#00C9B7",
-    paddingVertical: 28,
-    paddingHorizontal: 24,
-    borderRadius: 22,
+  header: {
+    paddingTop: 48,
+    paddingBottom: 28,
+    paddingHorizontal: 20,
+    backgroundColor: "#A855F7",
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    flexDirection: "row",
+    alignItems: "center",
   },
+
   menuBtn: {
-    position: "absolute",
-    top: 18,
-    left: 18,
-    zIndex: 10,
+    width: 40,
+    justifyContent: "center",
   },
+
+  titleWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+
   title: {
     fontSize: 26,
     fontWeight: "700",
     color: "#fff",
-    textAlign: "center",
   },
-  subtitle: {
+
+  phase: {
     marginTop: 6,
-    fontSize: 14,
-    color: "#EFFFFC",
-    textAlign: "center",
+    fontSize: 13,
+    letterSpacing: 2,
+    color: "rgba(255,255,255,0.85)",
+  },
+
+  indicator: {
+    marginTop: 10,
+    width: 44,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.9)",
   },
 });
