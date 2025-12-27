@@ -1,63 +1,33 @@
 import { View, StyleSheet } from "react-native";
-import { PHASE_COLORS } from "../cycle/colors";
-import { DEFAULT_CYCLE_STATE } from "../cycle/state";
-import { calculateCyclePhase } from "../cycle/state";
+import { generateCycleUI } from "../cycle/state";
 
-type Props = {
-  size?: number;
-};
+const RADIUS = 120;
+const DOT_SIZE = 10;
 
-export function CycleRing({ size = 220 }: Props) {
-  const radius = size / 2;
-  const dotSize = 8;
-  const totalDays = DEFAULT_CYCLE_STATE.cycleLength;
-
-  const today = new Date();
+export function CycleRing() {
+  const cycleDays = generateCycleUI();
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      {Array.from({ length: totalDays }).map((_, index) => {
-        const angle = (2 * Math.PI * index) / totalDays;
+    <View style={styles.container}>
+      {cycleDays.map((dayData, index) => {
+        const angle = (2 * Math.PI * index) / cycleDays.length;
 
-        const x =
-          radius +
-          (radius - 16) * Math.cos(angle) -
-          dotSize / 2;
-
-        const y =
-          radius +
-          (radius - 16) * Math.sin(angle) -
-          dotSize / 2;
-
-        // Day number in cycle
-        const dayNumber = index + 1;
-
-        // Fake date for phase calculation
-        const fakeDate = new Date(
-          new Date(DEFAULT_CYCLE_STATE.lastPeriodStart).getTime() +
-            index * 24 * 60 * 60 * 1000
-        );
-
-        const phase = calculateCyclePhase(
-          fakeDate.toISOString().slice(0, 10),
-          DEFAULT_CYCLE_STATE.cycleLength,
-          DEFAULT_CYCLE_STATE.periodLength
-        );
-
-        const isToday =
-          today.toDateString() === fakeDate.toDateString();
+        const x = RADIUS * Math.cos(angle);
+        const y = RADIUS * Math.sin(angle);
 
         return (
           <View
-            key={index}
+            key={dayData.day}
             style={[
               styles.dot,
               {
-                left: x,
-                top: y,
-                backgroundColor: PHASE_COLORS[phase],
-                opacity: isToday ? 1 : 0.5,
-                transform: [{ scale: isToday ? 1.4 : 1 }],
+                backgroundColor: dayData.color,
+                transform: [
+                  { translateX: x },
+                  { translateY: y },
+                  { scale: dayData.isToday ? 1.4 : 1 },
+                ],
+                opacity: dayData.isSafe ? 0.4 : 1,
               },
             ]}
           />
@@ -69,12 +39,15 @@ export function CycleRing({ size = 220 }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    position: "relative",
+    width: RADIUS * 2 + 30,
+    height: RADIUS * 2 + 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
   dot: {
     position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
   },
 });
