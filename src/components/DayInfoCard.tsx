@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   Animated,
+  Platform,
 } from "react-native";
 import { getPhaseForDay } from "@/src/cycle/state";
 import { PHASE_COLORS } from "@/src/cycle/colors";
@@ -15,51 +14,76 @@ type Props = {
 
 export function DayInfoCard({ day, periodLength }: Props) {
   const phase = getPhaseForDay(day, periodLength);
-  const color = PHASE_COLORS[phase];
+  const phaseColor = PHASE_COLORS[phase];
 
   // animation values
-  const translateY = useRef(new Animated.Value(20)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.96)).current;
+  const appear = useRef(new Animated.Value(0)).current;
+  const colorAnim = useRef(new Animated.Value(0)).current;
+
+  // keep previous color
+  const prevColor = useRef(phaseColor);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // appear animation
+    Animated.spring(appear, {
+      toValue: 1,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+
+    // color transition
+    colorAnim.setValue(0);
+    Animated.timing(colorAnim, {
+      toValue: 1,
+      duration: 260,
+      useNativeDriver: false, // color interpolation
+    }).start();
+
+    prevColor.current = phaseColor;
   }, [day]);
+
+  // animated colors
+  const animatedColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [prevColor.current, phaseColor],
+  });
 
   return (
     <Animated.View
       style={[
         styles.card,
         {
-          borderColor: color,
-          transform: [{ translateY }, { scale }],
-          opacity,
+          borderColor: animatedColor,
+          shadowColor: phaseColor,
+          transform: [
+            {
+              translateY: appear.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0],
+              }),
+            },
+            {
+              scale: appear.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.96, 1],
+              }),
+            },
+          ],
+          opacity: appear,
         },
       ]}
     >
-      <Text style={[styles.day, { color }]}>
+      <Animated.Text
+        style={[styles.day, { color: animatedColor }]}
+      >
         Day {day}
-      </Text>
+      </Animated.Text>
 
-      <Text style={[styles.phase, { color }]}>
+      <Animated.Text
+        style={[styles.phase, { color: animatedColor }]}
+      >
         {phase} Phase
-      </Text>
+      </Animated.Text>
     </Animated.View>
   );
 }
@@ -68,11 +92,19 @@ const styles = StyleSheet.create({
   card: {
     marginTop: 16,
     paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     backgroundColor: "#020617",
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: "center",
     borderWidth: 1.5,
+
+    // Glow
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+
+    // Android glow
+    elevation: Platform.OS === "android" ? 6 : 0,
   },
   day: {
     fontSize: 14,
