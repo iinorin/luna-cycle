@@ -27,6 +27,13 @@ export default function DrawerLayout() {
         }}
       />
 
+      <Drawer.Screen
+        name="track-period"
+  options={{ 
+        title: "📊 Track Your Period",
+         }}
+/>
+
       {/* DRAWER FEATURES */}
       <Drawer.Screen
         name="mood"
