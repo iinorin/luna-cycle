@@ -16,33 +16,33 @@ export function DayInfoCard({ day, periodLength }: Props) {
   const phase = getPhaseForDay(day, periodLength);
   const phaseColor = PHASE_COLORS[phase];
 
-  // animation values
+  // Separate animation values
   const appear = useRef(new Animated.Value(0)).current;
   const colorAnim = useRef(new Animated.Value(0)).current;
 
-  // keep previous color
   const prevColor = useRef(phaseColor);
 
   useEffect(() => {
-    // appear animation
-    Animated.spring(appear, {
-      toValue: 1,
-      friction: 7,
-      useNativeDriver: true,
-    }).start();
-
-    // color transition
+    // Reset
+    appear.setValue(0);
     colorAnim.setValue(0);
-    Animated.timing(colorAnim, {
-      toValue: 1,
-      duration: 260,
-      useNativeDriver: false, // color interpolation
-    }).start();
+
+    Animated.parallel([
+      Animated.spring(appear, {
+        toValue: 1,
+        friction: 7,
+        useNativeDriver: false, // IMPORTANT
+      }),
+      Animated.timing(colorAnim, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: false, // IMPORTANT
+      }),
+    ]).start();
 
     prevColor.current = phaseColor;
   }, [day]);
 
-  // animated colors
   const animatedColor = colorAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [prevColor.current, phaseColor],
@@ -55,21 +55,21 @@ export function DayInfoCard({ day, periodLength }: Props) {
         {
           borderColor: animatedColor,
           shadowColor: phaseColor,
+          opacity: appear,
           transform: [
             {
               translateY: appear.interpolate({
                 inputRange: [0, 1],
-                outputRange: [20, 0],
+                outputRange: [16, 0],
               }),
             },
             {
               scale: appear.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0.96, 1],
+                outputRange: [0.97, 1],
               }),
             },
           ],
-          opacity: appear,
         },
       ]}
     >
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 10,
 
-    // Android glow
+    // Android glow fallback
     elevation: Platform.OS === "android" ? 6 : 0,
   },
   day: {
