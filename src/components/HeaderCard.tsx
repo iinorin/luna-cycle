@@ -2,8 +2,15 @@ import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import { useEffect, useRef } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { PHASE_GRADIENTS } from "../cycle/colors";
+import { CyclePhase } from "../cycle/types";
 
-export function HeaderCard({ phase = "LUTEAL PHASE" }) {
+type HeaderCardProps = {
+  phase: CyclePhase;
+};
+
+export function HeaderCard({ phase }: HeaderCardProps) {
   const navigation = useNavigation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
@@ -25,31 +32,35 @@ export function HeaderCard({ phase = "LUTEAL PHASE" }) {
 
   return (
     <Animated.View
-      style={[
-        styles.header,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
     >
-      {/* Hamburger */}
-      <Pressable
-        style={styles.menuBtn}
-        onPress={() => navigation.dispatch({ type: "OPEN_DRAWER" })}
+      <LinearGradient
+        colors={PHASE_GRADIENTS[phase]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
       >
-        <Ionicons name="menu" size={26} color="#fff" />
-      </Pressable>
+        {/* Hamburger */}
+        <Pressable
+          style={styles.menuBtn}
+          onPress={() => navigation.dispatch({ type: "OPEN_DRAWER" })}
+        >
+          <Ionicons name="menu" size={26} color="#fff" />
+        </Pressable>
 
-      {/* Title */}
-      <View style={styles.titleWrapper}>
-        <Text style={styles.title}>Luna Cycle</Text>
-        <Text style={styles.phase}>{phase}</Text>
-        <View style={styles.indicator} />
-      </View>
+        {/* Title */}
+        <View style={styles.titleWrapper}>
+          <Text style={styles.title}>Luna Cycle</Text>
+          <Text style={styles.phase}>{phase.toUpperCase()} PHASE</Text>
+          <View style={styles.indicator} />
+        </View>
 
-      {/* Spacer to keep title centered */}
-      <View style={{ width: 40 }} />
+        {/* Spacer */}
+        <View style={{ width: 40 }} />
+      </LinearGradient>
     </Animated.View>
   );
 }
@@ -59,7 +70,6 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 28,
     paddingHorizontal: 20,
-    backgroundColor: "#A855F7",
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     flexDirection: "row",
