@@ -5,6 +5,7 @@ import {
   StyleSheet,
   PanResponder,
 } from "react-native";
+import * as Haptics from "expo-haptics"; 
 import { CycleDot } from "./CycleDots";
 import { DayInfoCard } from "./DayInfoCard";
 import { getPhaseForDay } from "@/src/cycle/state";
@@ -29,10 +30,8 @@ export function CycleRing({
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 30,
     onPanResponderRelease: (_, g) => {
-      if (g.dx < -50)
-        setOffset((p: number) => p + cycleLength);
-      if (g.dx > 50)
-        setOffset((p: number) => Math.max(0, p - cycleLength));
+      if (g.dx < -50) setOffset((p) => p + cycleLength);
+      if (g.dx > 50) setOffset((p) => Math.max(0, p - cycleLength));
     },
   });
 
@@ -64,7 +63,12 @@ export function CycleRing({
             <View
               key={i}
               style={[styles.dotWrapper, { left: x, top: y }]}
-              onTouchEnd={() => setSelectedDay(day)}
+              onTouchEnd={() => {
+                Haptics.impactAsync(
+                  Haptics.ImpactFeedbackStyle.Light
+                ); // ✅ HAPTIC
+                setSelectedDay(day);
+              }}
             >
               <CycleDot
                 phase={phase}
