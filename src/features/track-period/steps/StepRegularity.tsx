@@ -1,4 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useState } from "react";
 import TrackCard from "../components/TrackCard";
 import { Regularity } from "../types";
 
@@ -8,29 +9,39 @@ type Props = {
   onBack?: () => void;
 };
 
-const OPTIONS: Regularity[] = ["regular", "irregular", "not_sure"];
+const OPTIONS: Regularity[] = ["regular", "irregular","Sometimes", "not_sure"];
 
 export default function StepRegularity({ value, onNext, onBack }: Props) {
+  const [selected, setSelected] = useState<Regularity>(value);
+
   return (
     <TrackCard title="Cycle regularity">
-      {OPTIONS.map(opt => (
+      {OPTIONS.map((opt) => (
         <Pressable
           key={opt}
-          onPress={() => onNext(opt)}
+          onPress={() => setSelected(opt)}
           style={[
             styles.option,
-            value === opt && styles.active,
+            selected === opt && styles.active,
           ]}
         >
-          <Text style={styles.text}>{opt}</Text>
+          <Text style={styles.text}>
+            {opt.replace("_", " ")}
+          </Text>
         </Pressable>
       ))}
 
-      {onBack && (
-        <Pressable onPress={onBack}>
-          <Text style={styles.back}>Back</Text>
+      <View style={styles.actions}>
+        {onBack && (
+          <Pressable onPress={onBack}>
+            <Text style={styles.back}>Back</Text>
+          </Pressable>
+        )}
+
+        <Pressable onPress={() => onNext(selected)}>
+          <Text style={styles.next}>Next</Text>
         </Pressable>
-      )}
+      </View>
     </TrackCard>
   );
 }
@@ -49,9 +60,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
     fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
   },
   back: {
     color: "#9CA3AF",
-    marginTop: 10,
+  },
+  next: {
+    color: "#EC4899",
+    fontWeight: "700",
   },
 });

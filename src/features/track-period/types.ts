@@ -1,4 +1,4 @@
-export type Regularity = "regular" | "irregular" | "not_sure";
+export type Regularity = "regular" | "irregular" | "Sometimes" | "not_sure";
 
 export type TrackPeriodData = {
   cycleLength: number;
