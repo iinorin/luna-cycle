@@ -5,7 +5,7 @@ type Props = {
   value: number;
   onChange: (value: number) => void;
   onNext: () => void;
-  onBack: () => void;
+  onBack?: () => void; // ✅ optional
 };
 
 export default function StepPeriodDuration({
@@ -29,9 +29,11 @@ export default function StepPeriodDuration({
       </View>
 
       <View style={styles.actions}>
-        <Pressable onPress={onBack}>
-          <Text style={styles.back}>Back</Text>
-        </Pressable>
+        {onBack && ( // ✅ safe render
+          <Pressable onPress={onBack}>
+            <Text style={styles.back}>Back</Text>
+          </Pressable>
+        )}
 
         <Pressable onPress={onNext}>
           <Text style={styles.next}>Next</Text>

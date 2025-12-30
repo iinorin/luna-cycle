@@ -5,7 +5,7 @@ type Props = {
   value: string[];
   onChange: (value: string[]) => void;
   onNext: () => void;
-  onBack: () => void;
+  onBack?: () => void; // ✅ optional
 };
 
 const OPTIONS = ["Cramps", "Mood swings", "Headache", "Bloating"];
@@ -40,9 +40,11 @@ export default function StepSymptoms({
       ))}
 
       <View style={styles.actions}>
-        <Pressable onPress={onBack}>
-          <Text style={styles.back}>Back</Text>
-        </Pressable>
+        {onBack && ( // ✅ safe render
+          <Pressable onPress={onBack}>
+            <Text style={styles.back}>Back</Text>
+          </Pressable>
+        )}
 
         <Pressable onPress={onNext}>
           <Text style={styles.next}>Next</Text>

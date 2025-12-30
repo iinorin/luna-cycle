@@ -1,13 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { TrackPeriodData } from "../types";
 
 type Props = {
-  data: {
-    lastPeriodDate: Date;
-    cycleLength: number;
-    periodDuration: number;
-    regularity: string;
-    symptoms: string[];
-  };
+  data: TrackPeriodData;
   onEdit: (step: number) => void;
 };
 
@@ -16,39 +11,11 @@ export default function StepDone({ data, onEdit }: Props) {
     <View style={styles.card}>
       <Text style={styles.title}>Your Cycle Summary</Text>
 
-      <SummaryRow
-        label="Last Period"
-        value={data.lastPeriodDate.toDateString()}
-        onEdit={() => onEdit(1)}
-      />
-
-      <SummaryRow
-        label="Cycle Length"
-        value={`${data.cycleLength} days`}
-        onEdit={() => onEdit(2)}
-      />
-
-      <SummaryRow
-        label="Period Duration"
-        value={`${data.periodDuration} days`}
-        onEdit={() => onEdit(3)}
-      />
-
-      <SummaryRow
-        label="Regularity"
-        value={data.regularity}
-        onEdit={() => onEdit(4)}
-      />
-
-      <SummaryRow
-        label="Symptoms"
-        value={
-          data.symptoms.length
-            ? data.symptoms.join(", ")
-            : "None"
-        }
-        onEdit={() => onEdit(5)}
-      />
+      <Row label="Last Period" value={data.lastPeriod.toDateString()} onEdit={() => onEdit(1)} />
+      <Row label="Cycle Length" value={`${data.cycleLength} days`} onEdit={() => onEdit(2)} />
+      <Row label="Period Duration" value={`${data.periodDuration} days`} onEdit={() => onEdit(3)} />
+      <Row label="Regularity" value={data.regularity} onEdit={() => onEdit(4)} />
+      <Row label="Symptoms" value={data.symptoms.join(", ") || "None"} onEdit={() => onEdit(5)} />
 
       <Pressable style={styles.save}>
         <Text style={styles.saveText}>Save & Continue</Text>
@@ -57,7 +24,7 @@ export default function StepDone({ data, onEdit }: Props) {
   );
 }
 
-function SummaryRow({
+function Row({
   label,
   value,
   onEdit,
@@ -67,43 +34,43 @@ function SummaryRow({
   onEdit: () => void;
 }) {
   return (
-    <Pressable onPress={onEdit} style={styles.row}>
+    <View style={styles.row}>
       <View>
         <Text style={styles.label}>{label}</Text>
         <Text style={styles.value}>{value}</Text>
       </View>
-      <Text style={styles.edit}>Edit</Text>
-    </Pressable>
+      <Pressable onPress={onEdit}>
+        <Text style={styles.edit}>Edit</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#020617",
-    borderRadius: 20,
+    margin: 16,
     padding: 20,
+    borderRadius: 24,
+    backgroundColor: "#020617",
   },
   title: {
-    color: "#fff",
-    fontSize: 18,
+    color: "white",
+    fontSize: 22,
     fontWeight: "700",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   row: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1F2933",
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    marginBottom: 16,
   },
   label: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: "#94A3B8",
+    fontSize: 13,
   },
   value: {
-    color: "#fff",
-    fontSize: 14,
+    color: "white",
+    fontSize: 16,
     fontWeight: "600",
   },
   edit: {
@@ -114,11 +81,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
     backgroundColor: "#EC4899",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     alignItems: "center",
   },
   saveText: {
-    color: "#fff",
+    color: "white",
     fontWeight: "700",
+    fontSize: 16,
   },
 });

@@ -1,29 +1,22 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import TrackCard from "../components/TrackCard";
-
-type Regularity = "regular" | "sometimes" | "irregular";
+import { Regularity } from "../types";
 
 type Props = {
   value: Regularity;
-  onChange: (value: Regularity) => void;
-  onNext: () => void;
-  onBack: () => void;
+  onNext: (value: Regularity) => void;
+  onBack?: () => void;
 };
 
-export default function StepRegularity({
-  value,
-  onChange,
-  onNext,
-  onBack,
-}: Props) {
-  const options: Regularity[] = ["regular", "sometimes", "irregular"];
+const OPTIONS: Regularity[] = ["regular", "irregular", "not_sure"];
 
+export default function StepRegularity({ value, onNext, onBack }: Props) {
   return (
-    <TrackCard title="Are your periods regular?">
-      {options.map((opt) => (
+    <TrackCard title="Cycle regularity">
+      {OPTIONS.map(opt => (
         <Pressable
           key={opt}
-          onPress={() => onChange(opt)}
+          onPress={() => onNext(opt)}
           style={[
             styles.option,
             value === opt && styles.active,
@@ -33,15 +26,11 @@ export default function StepRegularity({
         </Pressable>
       ))}
 
-      <View style={styles.actions}>
+      {onBack && (
         <Pressable onPress={onBack}>
           <Text style={styles.back}>Back</Text>
         </Pressable>
-
-        <Pressable onPress={onNext}>
-          <Text style={styles.next}>Next</Text>
-        </Pressable>
-      </View>
+      )}
     </TrackCard>
   );
 }
@@ -61,16 +50,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
   back: {
     color: "#9CA3AF",
-  },
-  next: {
-    color: "#EC4899",
-    fontWeight: "700",
+    marginTop: 10,
   },
 });

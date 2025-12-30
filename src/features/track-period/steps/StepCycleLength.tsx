@@ -1,75 +1,66 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import TrackCard from "../components/TrackCard";
+import { useState } from "react";
 
 type Props = {
   value: number;
-  onChange: (value: number) => void;
-  onNext: () => void;
-  onBack: () => void;
+  onNext: (value: number) => void;
 };
 
-export default function StepCycleLength({
-  value,
-  onChange,
-  onNext,
-  onBack,
-}: Props) {
+export default function StepCycleLength({ value, onNext }: Props) {
+  const [cycle, setCycle] = useState(value);
+
   return (
-    <TrackCard title="Cycle Length">
-      <Text style={styles.value}>{value} days</Text>
+    <View style={styles.card}>
+      <Text style={styles.title}>Cycle Length</Text>
 
-      <View style={styles.row}>
-        <Pressable onPress={() => onChange(Math.max(21, value - 1))}>
-          <Text style={styles.btn}>−</Text>
-        </Pressable>
+      <Text style={styles.value}>{cycle} days</Text>
 
-        <Pressable onPress={() => onChange(Math.min(35, value + 1))}>
-          <Text style={styles.btn}>+</Text>
-        </Pressable>
-      </View>
+      <Pressable
+        style={styles.button}
+        onPress={() => setCycle((v) => v + 1)}
+      >
+        <Text style={styles.buttonText}>Increase</Text>
+      </Pressable>
 
-      <View style={styles.actions}>
-        <Pressable onPress={onBack}>
-          <Text style={styles.back}>Back</Text>
-        </Pressable>
-
-        <Pressable onPress={onNext}>
-          <Text style={styles.next}>Next</Text>
-        </Pressable>
-      </View>
-    </TrackCard>
+      <Pressable style={styles.next} onPress={() => onNext(cycle)}>
+        <Text style={styles.nextText}>Next</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    margin: 16,
+    padding: 20,
+    borderRadius: 20,
+    backgroundColor: "#020617",
+  },
+  title: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "700",
+  },
   value: {
-    color: "#fff",
-    fontSize: 32,
-    fontWeight: "700",
-    textAlign: "center",
-    marginVertical: 20,
+    color: "white",
+    fontSize: 20,
+    marginVertical: 16,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 30,
+  button: {
+    backgroundColor: "#334155",
+    padding: 12,
+    borderRadius: 12,
+    alignItems: "center",
   },
-  btn: {
-    color: "#EC4899",
-    fontSize: 36,
-    fontWeight: "700",
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  back: {
-    color: "#9CA3AF",
-    fontSize: 16,
+  buttonText: {
+    color: "white",
   },
   next: {
+    marginTop: 20,
+    alignSelf: "flex-end",
+  },
+  nextText: {
     color: "#EC4899",
-    fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 });

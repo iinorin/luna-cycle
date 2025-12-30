@@ -1,90 +1,48 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Platform,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import TrackCard from "../components/TrackCard";
 
 type Props = {
-  date: Date;
-  onChange: (d: Date) => void;
-  onNext: () => void;
+  value: Date;
+  onNext: (value: Date) => void;
+  onBack?: () => void;
 };
 
-export default function StepLastPeriod({
-  date,
-  onChange,
-  onNext,
-}: Props) {
-  const [show, setShow] = useState(false);
-
+export default function StepLastPeriod({ value, onNext, onBack }: Props) {
   return (
-    <TrackCard title="Last Period">
+    <TrackCard title="Last period date">
+      <Text style={styles.date}>{value.toDateString()}</Text>
 
-      <Text style={styles.question}>
-        When did your last period start?
-      </Text>
+      <View style={styles.actions}>
+        {onBack && (
+          <Pressable onPress={onBack}>
+            <Text style={styles.back}>Back</Text>
+          </Pressable>
+        )}
 
-      <Pressable
-        style={styles.button}
-        onPress={() => setShow(true)}
-      >
-        <Ionicons name="calendar-outline" size={20} color="#fff" />
-        <Text style={styles.text}>
-          {date.toDateString()}
-        </Text>
-      </Pressable>
-
-      {show && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_, d) => {
-            setShow(false);
-            if (d) onChange(d);
-          }}
-        />
-      )}
-
-      <Pressable style={styles.next} onPress={onNext}>
-        <Text style={styles.nextText}>Next</Text>
-      </Pressable>
+        <Pressable onPress={() => onNext(value)}>
+          <Text style={styles.next}>Next</Text>
+        </Pressable>
+      </View>
     </TrackCard>
   );
 }
 
 const styles = StyleSheet.create({
-  question: {
+  date: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
+    textAlign: "center",
+    fontSize: 18,
+    marginVertical: 20,
   },
-  button: {
+  actions: {
     flexDirection: "row",
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: "#1F2933",
+    justifyContent: "space-between",
   },
-  text: {
-    color: "#fff",
+  back: {
+    color: "#9CA3AF",
   },
   next: {
-    marginTop: 20,
-    backgroundColor: "#EC4899",
-    padding: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  nextText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: "#EC4899",
+    fontWeight: "700",
   },
 });

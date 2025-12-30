@@ -1,96 +1,94 @@
+import { View } from "react-native";
 import { useState } from "react";
-import { View, StyleSheet } from "react-native";
 
-import StepLastPeriod from "./steps/StepLastPeriod";
 import StepCycleLength from "./steps/StepCycleLength";
+import StepLastPeriod from "./steps/StepLastPeriod";
 import StepPeriodDuration from "./steps/StepPeriodDuration";
 import StepRegularity from "./steps/StepRegularity";
 import StepSymptoms from "./steps/StepSymptoms";
 import StepDone from "./steps/StepDone";
 
+import { Regularity } from "./types";
+
 export default function TrackPeriodScreen() {
   const [step, setStep] = useState(1);
 
-  // ✅ Collected data
-  const [lastPeriodDate, setLastPeriodDate] = useState<Date>(new Date());
-  const [cycleLength, setCycleLength] = useState(28);
-  const [periodDuration, setPeriodDuration] = useState(5);
-  const [regularity, setRegularity] =
-    useState<"regular" | "sometimes" | "irregular">("regular");
-  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [data, setData] = useState({
+    cycleLength: 28,
+    lastPeriod: new Date(),
+    periodDuration: 5,
+    regularity: "regular" as Regularity,
+    symptoms: [] as string[],
+  });
 
   return (
-    <View style={styles.container}>
-      {/* STEP 1 */}
+    <View style={{ flex: 1 }}>
+      {/* STEP 1 — NO BACK */}
       {step === 1 && (
-        <StepLastPeriod
-          date={lastPeriodDate}
-          onChange={setLastPeriodDate}
-          onNext={() => setStep(2)}
+        <StepCycleLength
+          value={data.cycleLength}
+          onNext={(value) => {
+            setData((prev) => ({ ...prev, cycleLength: value }));
+            setStep(2);
+          }}
         />
       )}
 
       {/* STEP 2 */}
       {step === 2 && (
-        <StepCycleLength
-          value={cycleLength}
-          onChange={setCycleLength}
-          onNext={() => setStep(3)}
+        <StepLastPeriod
+          value={data.lastPeriod}
           onBack={() => setStep(1)}
+          onNext={(value) => {
+            setData((prev) => ({ ...prev, lastPeriod: value }));
+            setStep(3);
+          }}
         />
       )}
 
       {/* STEP 3 */}
       {step === 3 && (
         <StepPeriodDuration
-          value={periodDuration}
-          onChange={setPeriodDuration}
-          onNext={() => setStep(4)}
+          value={data.periodDuration}
           onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+          onChange={(value) =>
+            setData((prev) => ({ ...prev, periodDuration: value }))
+          }
         />
       )}
 
       {/* STEP 4 */}
       {step === 4 && (
         <StepRegularity
-          value={regularity}
-          onChange={setRegularity}
-          onNext={() => setStep(5)}
+          value={data.regularity}
           onBack={() => setStep(3)}
+          onNext={(value) => {
+            setData((prev) => ({ ...prev, regularity: value }));
+            setStep(5);
+          }}
         />
       )}
 
       {/* STEP 5 */}
       {step === 5 && (
         <StepSymptoms
-          value={symptoms}
-          onChange={setSymptoms}
-          onNext={() => setStep(6)}
+          value={data.symptoms}
           onBack={() => setStep(4)}
+          onNext={() => setStep(6)}
+          onChange={(value) =>
+            setData((prev) => ({ ...prev, symptoms: value }))
+          }
         />
       )}
 
-      {/* STEP 6 – FINAL REPORT */}
+      {/* STEP 6 */}
       {step === 6 && (
         <StepDone
-          data={{
-            lastPeriodDate,
-            cycleLength,
-            periodDuration,
-            regularity,
-            symptoms,
-          }}
-          onEdit={(targetStep) => setStep(targetStep)}
+          data={data}
+          onEdit={(stepNumber) => setStep(stepNumber)}
         />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-    padding: 20,
-  },
-});
