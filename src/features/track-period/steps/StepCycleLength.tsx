@@ -9,18 +9,42 @@ type Props = {
 export default function StepCycleLength({ value, onNext }: Props) {
   const [cycle, setCycle] = useState(value);
 
+  const increase = () => setCycle((v) => v + 1);
+  const decrease = () =>
+    setCycle((v) => (v > 21 ? v - 1 : v)); // safe min
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Cycle Length</Text>
 
       <Text style={styles.value}>{cycle} days</Text>
 
-      <Pressable
-        style={styles.button}
-        onPress={() => setCycle((v) => v + 1)}
-      >
-        <Text style={styles.buttonText}>Increase</Text>
-      </Pressable>
+      {/* Controls */}
+      <View style={styles.controls}>
+        {/* Decrease */}
+        <Pressable
+          onPress={decrease}
+          style={({ pressed }) => [
+            styles.controlButton,
+            pressed && styles.pressedDecrease,
+          ]}
+        >
+          <Text style={styles.controlText}>−</Text>
+          <Text style={styles.controlLabel}>Decrease</Text>
+        </Pressable>
+
+        {/* Increase */}
+        <Pressable
+          onPress={increase}
+          style={({ pressed }) => [
+            styles.controlButton,
+            pressed && styles.pressedIncrease,
+          ]}
+        >
+          <Text style={styles.controlText}>+</Text>
+          <Text style={styles.controlLabel}>Increase</Text>
+        </Pressable>
+      </View>
 
       <Pressable style={styles.next} onPress={() => onNext(cycle)}>
         <Text style={styles.nextText}>Next</Text>
@@ -45,18 +69,39 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 20,
     marginVertical: 16,
+    textAlign: "center",
   },
-  button: {
+  controls: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20,
+  },
+  controlButton: {
     backgroundColor: "#334155",
-    padding: 12,
-    borderRadius: 12,
+    width: 110,
+    height: 80,
+    borderRadius: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
-  buttonText: {
+  pressedIncrease: {
+    backgroundColor: "#4ade80", // green
+  },
+  pressedDecrease: {
+    backgroundColor: "#f87171", // red
+  },
+  controlText: {
     color: "white",
+    fontSize: 26,
+    fontWeight: "700",
+  },
+  controlLabel: {
+    color: "#e5e7eb",
+    fontSize: 12,
+    marginTop: 2,
   },
   next: {
-    marginTop: 20,
+    marginTop: 24,
     alignSelf: "flex-end",
   },
   nextText: {

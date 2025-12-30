@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useState } from "react";
 
 import StepCycleLength from "./steps/StepCycleLength";
@@ -22,73 +22,80 @@ export default function TrackPeriodScreen() {
   });
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* STEP 1 — NO BACK */}
-      {step === 1 && (
-        <StepCycleLength
-          value={data.cycleLength}
-          onNext={(value) => {
-            setData((prev) => ({ ...prev, cycleLength: value }));
-            setStep(2);
-          }}
-        />
-      )}
+    <View style={styles.screen}>
+      <View style={styles.content}>
+        {step === 1 && (
+          <StepCycleLength
+            value={data.cycleLength}
+            onNext={(value) => {
+              setData((prev) => ({ ...prev, cycleLength: value }));
+              setStep(2);
+            }}
+          />
+        )}
 
-      {/* STEP 2 */}
-      {step === 2 && (
-        <StepLastPeriod
-          value={data.lastPeriod}
-          onBack={() => setStep(1)}
-          onNext={(value) => {
-            setData((prev) => ({ ...prev, lastPeriod: value }));
-            setStep(3);
-          }}
-        />
-      )}
+        {step === 2 && (
+          <StepLastPeriod
+            value={data.lastPeriod}
+            onBack={() => setStep(1)}
+            onNext={(value) => {
+              setData((prev) => ({ ...prev, lastPeriod: value }));
+              setStep(3);
+            }}
+          />
+        )}
 
-      {/* STEP 3 */}
-      {step === 3 && (
-        <StepPeriodDuration
-          value={data.periodDuration}
-          onBack={() => setStep(2)}
-          onNext={() => setStep(4)}
-          onChange={(value) =>
-            setData((prev) => ({ ...prev, periodDuration: value }))
-          }
-        />
-      )}
+        {step === 3 && (
+          <StepPeriodDuration
+            value={data.periodDuration}
+            onBack={() => setStep(2)}
+            onNext={() => setStep(4)}
+            onChange={(value) =>
+              setData((prev) => ({ ...prev, periodDuration: value }))
+            }
+          />
+        )}
 
-      {/* STEP 4 */}
-      {step === 4 && (
-        <StepRegularity
-          value={data.regularity}
-          onBack={() => setStep(3)}
-          onNext={(value) => {
-            setData((prev) => ({ ...prev, regularity: value }));
-            setStep(5);
-          }}
-        />
-      )}
+        {step === 4 && (
+          <StepRegularity
+            value={data.regularity}
+            onBack={() => setStep(3)}
+            onNext={(value) => {
+              setData((prev) => ({ ...prev, regularity: value }));
+              setStep(5);
+            }}
+          />
+        )}
 
-      {/* STEP 5 */}
-      {step === 5 && (
-        <StepSymptoms
-          value={data.symptoms}
-          onBack={() => setStep(4)}
-          onNext={() => setStep(6)}
-          onChange={(value) =>
-            setData((prev) => ({ ...prev, symptoms: value }))
-          }
-        />
-      )}
+        {step === 5 && (
+          <StepSymptoms
+            value={data.symptoms}
+            onBack={() => setStep(4)}
+            onNext={() => setStep(6)}
+            onChange={(value) =>
+              setData((prev) => ({ ...prev, symptoms: value }))
+            }
+          />
+        )}
 
-      {/* STEP 6 */}
-      {step === 6 && (
-        <StepDone
-          data={data}
-          onEdit={(stepNumber) => setStep(stepNumber)}
-        />
-      )}
+        {step === 6 && (
+          <StepDone
+            data={data}
+            onEdit={(stepNumber) => setStep(stepNumber)}
+          />
+        )}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#2d10e9ff", 
+  },
+  content: {
+    paddingTop: 150,       // pushes cards down from top
+    paddingHorizontal: 16,
+  },
+});

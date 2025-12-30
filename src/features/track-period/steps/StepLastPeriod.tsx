@@ -1,4 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { Calendar } from "react-native-calendars";
 import TrackCard from "../components/TrackCard";
 
 type Props = {
@@ -8,10 +10,45 @@ type Props = {
 };
 
 export default function StepLastPeriod({ value, onNext, onBack }: Props) {
+  // local state so calendar actually works
+  const [selectedDate, setSelectedDate] = useState<Date>(value);
+
+  // keep in sync if parent updates value
+  useEffect(() => {
+    setSelectedDate(value);
+  }, [value]);
+
+  const dateKey = selectedDate.toISOString().split("T")[0];
+
   return (
     <TrackCard title="Last period date">
-      <Text style={styles.date}>{value.toDateString()}</Text>
+      {/* Calendar */}
+      <Calendar
+        onDayPress={(day) => {
+          setSelectedDate(new Date(day.dateString));
+        }}
+        markedDates={{
+          [dateKey]: {
+            selected: true,
+            selectedColor: "#EC4899",
+          },
+        }}
+        theme={{
+          calendarBackground: "transparent",
+          dayTextColor: "#fff",
+          monthTextColor: "#fff",
+          arrowColor: "#EC4899",
+          todayTextColor: "#F9A8D4",
+        }}
+        style={styles.calendar}
+      />
 
+      {/* Selected date */}
+      <Text style={styles.date}>
+        {selectedDate.toDateString()}
+      </Text>
+
+      {/* Actions */}
       <View style={styles.actions}>
         {onBack && (
           <Pressable onPress={onBack}>
@@ -19,7 +56,7 @@ export default function StepLastPeriod({ value, onNext, onBack }: Props) {
           </Pressable>
         )}
 
-        <Pressable onPress={() => onNext(value)}>
+        <Pressable onPress={() => onNext(selectedDate)}>
           <Text style={styles.next}>Next</Text>
         </Pressable>
       </View>
@@ -28,15 +65,20 @@ export default function StepLastPeriod({ value, onNext, onBack }: Props) {
 }
 
 const styles = StyleSheet.create({
+  calendar: {
+    marginTop: 8,
+    borderRadius: 12,
+  },
   date: {
     color: "#fff",
     textAlign: "center",
     fontSize: 18,
-    marginVertical: 20,
+    marginVertical: 16,
   },
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 8,
   },
   back: {
     color: "#9CA3AF",
