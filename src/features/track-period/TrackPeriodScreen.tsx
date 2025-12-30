@@ -1,5 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 import StepCycleLength from "./steps/StepCycleLength";
 import StepLastPeriod from "./steps/StepLastPeriod";
@@ -7,10 +8,12 @@ import StepPeriodDuration from "./steps/StepPeriodDuration";
 import StepRegularity from "./steps/StepRegularity";
 import StepSymptoms from "./steps/StepSymptoms";
 import StepDone from "./steps/StepDone";
+import StepSuccess from "./steps/StepSuccess";
 
 import { Regularity } from "./types";
 
 export default function TrackPeriodScreen() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
 
   const [data, setData] = useState({
@@ -78,12 +81,28 @@ export default function TrackPeriodScreen() {
           />
         )}
 
+        {/* REVIEW STEP */}
         {step === 6 && (
           <StepDone
             data={data}
             onEdit={(stepNumber) => setStep(stepNumber)}
+            onSave={() => {
+              // ✅ SAVE LOGIC GOES HERE (later)
+              setStep(7); // move to success
+            }}
           />
         )}
+
+        {/* SUCCESS STEP */}
+        {step === 7 && (
+          <StepSuccess
+            onGoHome={() => {
+              router.replace("/(tabs)/cycle" as any);
+            }}
+          />
+        )}
+
+
       </View>
     </View>
   );
@@ -92,10 +111,10 @@ export default function TrackPeriodScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#2d10e9ff", 
+    backgroundColor: "#2d10e9ff",
   },
   content: {
-    paddingTop: 150,       // pushes cards down from top
+    paddingTop: 150,
     paddingHorizontal: 16,
   },
 });

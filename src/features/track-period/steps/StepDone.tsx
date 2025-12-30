@@ -1,92 +1,71 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { TrackPeriodData } from "../types";
+import TrackCard from "../components/TrackCard";
 
 type Props = {
-  data: TrackPeriodData;
+  data: any;
   onEdit: (step: number) => void;
+  onSave: () => void;
 };
 
-export default function StepDone({ data, onEdit }: Props) {
+export default function StepDone({ data, onEdit, onSave }: Props) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Your Cycle Summary</Text>
+    <TrackCard title="Review details">
+      <View style={styles.row}>
+        <Text style={styles.label}>Cycle Length</Text>
+        <Pressable onPress={() => onEdit(1)}>
+          <Text style={styles.value}>{data.cycleLength} days</Text>
+        </Pressable>
+      </View>
 
-      <Row label="Last Period" value={data.lastPeriod.toDateString()} onEdit={() => onEdit(1)} />
-      <Row label="Cycle Length" value={`${data.cycleLength} days`} onEdit={() => onEdit(2)} />
-      <Row label="Period Duration" value={`${data.periodDuration} days`} onEdit={() => onEdit(3)} />
-      <Row label="Regularity" value={data.regularity} onEdit={() => onEdit(4)} />
-      <Row label="Symptoms" value={data.symptoms.join(", ") || "None"} onEdit={() => onEdit(5)} />
+      <View style={styles.row}>
+        <Text style={styles.label}>Last Period</Text>
+        <Pressable onPress={() => onEdit(2)}>
+          <Text style={styles.value}>
+            {data.lastPeriod.toDateString()}
+          </Text>
+        </Pressable>
+      </View>
 
-      <Pressable style={styles.save}>
+      <View style={styles.row}>
+        <Text style={styles.label}>Duration</Text>
+        <Pressable onPress={() => onEdit(3)}>
+          <Text style={styles.value}>{data.periodDuration} days</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Regularity</Text>
+        <Pressable onPress={() => onEdit(4)}>
+          <Text style={styles.value}>{data.regularity}</Text>
+        </Pressable>
+      </View>
+
+      <Pressable style={styles.save} onPress={onSave}>
         <Text style={styles.saveText}>Save & Continue</Text>
       </Pressable>
-    </View>
-  );
-}
-
-function Row({
-  label,
-  value,
-  onEdit,
-}: {
-  label: string;
-  value: string;
-  onEdit: () => void;
-}) {
-  return (
-    <View style={styles.row}>
-      <View>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{value}</Text>
-      </View>
-      <Pressable onPress={onEdit}>
-        <Text style={styles.edit}>Edit</Text>
-      </Pressable>
-    </View>
+    </TrackCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 24,
-    backgroundColor: "#020617",
-  },
-  title: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   label: {
-    color: "#94A3B8",
+    color: "#9CA3AF",
     fontSize: 13,
   },
   value: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
-  },
-  edit: {
-    color: "#EC4899",
-    fontWeight: "600",
+    marginTop: 4,
   },
   save: {
-    marginTop: 24,
-    backgroundColor: "#EC4899",
-    padding: 16,
-    borderRadius: 18,
+    marginTop: 20,
     alignItems: "center",
   },
   saveText: {
-    color: "white",
+    color: "#EC4899",
     fontWeight: "700",
-    fontSize: 16,
   },
 });
