@@ -24,7 +24,8 @@ export default function StepLastPeriod({
   const [show, setShow] = useState(false);
 
   return (
-    <TrackCard>
+    <TrackCard title="Last Period">
+
       <Text style={styles.question}>
         When did your last period start?
       </Text>

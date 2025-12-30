@@ -1,93 +1,82 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import TrackCard from "../components/TrackCard";
 
-const SYMPTOMS = [
-  "Cramps",
-  "Acne",
-  "Mood swings",
-  "Headache",
-  "Fatigue",
-];
-
 type Props = {
   value: string[];
-  onChange: (v: string[]) => void;
+  onChange: (value: string[]) => void;
   onNext: () => void;
+  onBack: () => void;
 };
+
+const OPTIONS = ["Cramps", "Mood swings", "Headache", "Bloating"];
 
 export default function StepSymptoms({
   value,
   onChange,
   onNext,
+  onBack,
 }: Props) {
-  const toggle = (s: string) => {
-    if (value.includes(s)) {
-      onChange(value.filter((x) => x !== s));
+  function toggle(symptom: string) {
+    if (value.includes(symptom)) {
+      onChange(value.filter((s) => s !== symptom));
     } else {
-      onChange([...value, s]);
+      onChange([...value, symptom]);
     }
-  };
+  }
 
   return (
-    <TrackCard>
-      <Text style={styles.question}>
-        Do you usually experience any of these?
-      </Text>
+    <TrackCard title="Any symptoms?">
+      {OPTIONS.map((s) => (
+        <Pressable
+          key={s}
+          onPress={() => toggle(s)}
+          style={[
+            styles.option,
+            value.includes(s) && styles.active,
+          ]}
+        >
+          <Text style={styles.text}>{s}</Text>
+        </Pressable>
+      ))}
 
-      <View style={styles.row}>
-        {SYMPTOMS.map((s) => (
-          <Pressable
-            key={s}
-            onPress={() => toggle(s)}
-            style={[
-              styles.chip,
-              value.includes(s) && styles.active,
-            ]}
-          >
-            <Text style={styles.text}>{s}</Text>
-          </Pressable>
-        ))}
+      <View style={styles.actions}>
+        <Pressable onPress={onBack}>
+          <Text style={styles.back}>Back</Text>
+        </Pressable>
+
+        <Pressable onPress={onNext}>
+          <Text style={styles.next}>Next</Text>
+        </Pressable>
       </View>
-
-      <Pressable style={styles.next} onPress={onNext}>
-        <Text style={styles.nextText}>Finish</Text>
-      </Pressable>
     </TrackCard>
   );
 }
 
 const styles = StyleSheet.create({
-  question: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  chip: {
-    backgroundColor: "#1F2933",
-    padding: 12,
-    borderRadius: 12,
+  option: {
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: "#020617",
+    marginBottom: 12,
   },
   active: {
     backgroundColor: "#EC4899",
   },
   text: {
     color: "#fff",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  back: {
+    color: "#9CA3AF",
   },
   next: {
-    marginTop: 20,
-    backgroundColor: "#EC4899",
-    padding: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  nextText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: "#EC4899",
+    fontWeight: "700",
   },
 });

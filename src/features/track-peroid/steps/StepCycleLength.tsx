@@ -3,74 +3,73 @@ import TrackCard from "../components/TrackCard";
 
 type Props = {
   value: number;
-  onChange: (v: number) => void;
+  onChange: (value: number) => void;
   onNext: () => void;
+  onBack: () => void;
 };
 
 export default function StepCycleLength({
   value,
   onChange,
   onNext,
+  onBack,
 }: Props) {
   return (
-    <TrackCard>
-      <Text style={styles.question}>
-        Average cycle length
-      </Text>
+    <TrackCard title="Cycle Length">
+      <Text style={styles.value}>{value} days</Text>
 
       <View style={styles.row}>
-        {[26, 28, 30].map((d) => (
-          <Pressable
-            key={d}
-            onPress={() => onChange(d)}
-            style={[
-              styles.chip,
-              value === d && styles.active,
-            ]}
-          >
-            <Text style={styles.text}>{d} days</Text>
-          </Pressable>
-        ))}
+        <Pressable onPress={() => onChange(Math.max(21, value - 1))}>
+          <Text style={styles.btn}>−</Text>
+        </Pressable>
+
+        <Pressable onPress={() => onChange(Math.min(35, value + 1))}>
+          <Text style={styles.btn}>+</Text>
+        </Pressable>
       </View>
 
-      <Pressable style={styles.next} onPress={onNext}>
-        <Text style={styles.nextText}>Save</Text>
-      </Pressable>
+      <View style={styles.actions}>
+        <Pressable onPress={onBack}>
+          <Text style={styles.back}>Back</Text>
+        </Pressable>
+
+        <Pressable onPress={onNext}>
+          <Text style={styles.next}>Next</Text>
+        </Pressable>
+      </View>
     </TrackCard>
   );
 }
 
 const styles = StyleSheet.create({
-  question: {
+  value: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
+    fontSize: 32,
+    fontWeight: "700",
+    textAlign: "center",
+    marginVertical: 20,
   },
   row: {
     flexDirection: "row",
-    gap: 10,
+    justifyContent: "space-around",
+    marginBottom: 30,
   },
-  chip: {
-    backgroundColor: "#1F2933",
-    padding: 12,
-    borderRadius: 12,
+  btn: {
+    color: "#EC4899",
+    fontSize: 36,
+    fontWeight: "700",
   },
-  active: {
-    backgroundColor: "#EC4899",
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  text: {
-    color: "#fff",
+  back: {
+    color: "#9CA3AF",
+    fontSize: 16,
   },
   next: {
-    marginTop: 20,
-    backgroundColor: "#EC4899",
-    padding: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  nextText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: "#EC4899",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
