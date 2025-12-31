@@ -38,6 +38,7 @@ export async function getCycleData(): Promise<CycleData | null> {
   try {
     const stored = await AsyncStorage.getItem(CYCLE_DATA_KEY);
     if (!stored) return null;
+    console.log("Stored cycle data:", stored);
 
     return JSON.parse(stored) as CycleData;
   } catch (error) {
