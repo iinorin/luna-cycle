@@ -1,44 +1,26 @@
-import { Alert } from "react-native";
-import { getCycleData, deleteCycleData } from "../track-period/storage"
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-type GuardResult = "keep" | "update" | "delete";
+const CYCLE_GUARD_KEY = "cycle_guard_seen";
 
 /**
- * Shows popup if cycle data exists
- * Resolves user intent
+ * Should the cycle guard popup be shown?
+ * → true if NOT seen before
  */
-export function checkCycleDataGuard(): Promise<GuardResult | null> {
-  return new Promise(async (resolve) => {
-    const existing = await getCycleData();
+export async function shouldShowCycleGuard(): Promise<boolean> {
+  const seen = await AsyncStorage.getItem(CYCLE_GUARD_KEY);
+  return seen !== "true";
+}
 
-    // No data → no popup
-    if (!existing) {
-      resolve(null);
-      return;
-    }
+/**
+ * Mark guard as seen (so popup doesn't reappear)
+ */
+export async function markCycleGuardSeen(): Promise<void> {
+  await AsyncStorage.setItem(CYCLE_GUARD_KEY, "true");
+}
 
-    Alert.alert(
-      "Cycle Data Found",
-      "You already have cycle data saved. What would you like to do?",
-      [
-        {
-          text: "Keep Existing",
-          style: "cancel",
-          onPress: () => resolve("keep"),
-        },
-        {
-          text: "Update Data",
-          onPress: () => resolve("update"),
-        },
-        {
-          text: "Delete Data",
-          style: "destructive",
-          onPress: async () => {
-            await deleteCycleData();
-            resolve("delete");
-          },
-        },
-      ]
-    );
-  });
+/**
+ * Reset guard (used after delete or fresh save)
+ */
+export async function resetCycleGuard(): Promise<void> {
+  await AsyncStorage.removeItem(CYCLE_GUARD_KEY);
 }

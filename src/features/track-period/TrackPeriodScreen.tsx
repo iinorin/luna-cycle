@@ -1,6 +1,6 @@
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import StepCycleLength from "./steps/StepCycleLength";
 import StepLastPeriod from "./steps/StepLastPeriod";
@@ -17,15 +17,20 @@ import {
   deleteCycleData,
 } from "./storage";
 
+/** ✅ FIXED IMPORT (file actually exists) */
 import {
   shouldShowCycleGuard,
   markCycleGuardSeen,
   resetCycleGuard,
-} from "./cycleGuardStorage";
+} from "./cycleGuard";
+
+/** 🧩 UI MODAL */
+import CycleDataGuardModal from "./components/CycleDataGuardModal";
 
 export default function TrackPeriodScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [showGuard, setShowGuard] = useState(false);
 
   const [data, setData] = useState({
     cycleLength: 28,
@@ -36,7 +41,7 @@ export default function TrackPeriodScreen() {
   });
 
   /**
-   * 🔐 CYCLE GUARD (persistent, safe)
+   * 🔐 CYCLE GUARD
    */
   useFocusEffect(
     useCallback(() => {
@@ -47,36 +52,7 @@ export default function TrackPeriodScreen() {
         const shouldShow = await shouldShowCycleGuard();
         if (!shouldShow) return;
 
-        Alert.alert(
-          "Cycle Data Found",
-          "You already have cycle data saved. What would you like to do?",
-          [
-            {
-              text: "Keep Existing",
-              style: "cancel",
-              onPress: async () => {
-                await markCycleGuardSeen();
-                router.replace("/insights");
-              },
-            },
-            {
-              text: "Update",
-              onPress: async () => {
-                await markCycleGuardSeen();
-                setStep(1);
-              },
-            },
-            {
-              text: "Delete",
-              style: "destructive",
-              onPress: async () => {
-                await deleteCycleData();
-                await resetCycleGuard(); // allow fresh entry later
-                setStep(1);
-              },
-            },
-          ]
-        );
+        setShowGuard(true);
       };
 
       runGuard();
@@ -171,14 +147,33 @@ export default function TrackPeriodScreen() {
                 symptoms: data.symptoms,
               });
 
-              // 🔑 reset guard ONLY after data mutation
               await resetCycleGuard();
-
               setStep(7);
             }}
           />
         )}
       </View>
+
+      {/* 🧊 MODAL UI */}
+      <CycleDataGuardModal
+        visible={showGuard}
+        onKeep={async () => {
+          await markCycleGuardSeen();
+          setShowGuard(false);
+          router.replace("/insights");
+        }}
+        onUpdate={async () => {
+          await markCycleGuardSeen();
+          setShowGuard(false);
+          setStep(1);
+        }}
+        onDelete={async () => {
+          await deleteCycleData();
+          await resetCycleGuard();
+          setShowGuard(false);
+          setStep(1);
+        }}
+      />
     </View>
   );
 }
