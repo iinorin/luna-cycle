@@ -91,7 +91,7 @@ export default function TrackPeriodScreen() {
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
-            router.replace("/insights");
+            router.replace("/cycle");
           }}
         />
       </View>
