@@ -1,14 +1,14 @@
-import { View, StyleSheet } from "react-native";
-import { useState } from "react";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import StepCycleLength from "./steps/StepCycleLength";
+import StepDone from "./steps/StepDone";
 import StepLastPeriod from "./steps/StepLastPeriod";
 import StepPeriodDuration from "./steps/StepPeriodDuration";
 import StepRegularity from "./steps/StepRegularity";
-import StepSymptoms from "./steps/StepSymptoms";
-import StepDone from "./steps/StepDone";
 import StepSuccess from "./steps/StepSuccess";
+import StepSymptoms from "./steps/StepSymptoms";
 
 import { Regularity } from "./types";
 
@@ -23,6 +23,20 @@ export default function TrackPeriodScreen() {
     regularity: "regular" as Regularity,
     symptoms: [] as string[],
   });
+
+  // SUCCESS STEP - render outside the content padding
+  if (step === 7) {
+    return (
+      <View style={styles.screen}>
+        <StepSuccess
+          onGoHome={() => {
+            router.replace("/(tabs)/insights" as any);
+            console.log("SAVE PRESSED");
+          }}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -92,17 +106,6 @@ export default function TrackPeriodScreen() {
             }}
           />
         )}
-
-        {/* SUCCESS STEP */}
-        {step === 7 && (
-          <StepSuccess
-            onGoHome={() => {
-              router.replace("/(tabs)/cycle" as any);
-            }}
-          />
-        )}
-
-
       </View>
     </View>
   );
