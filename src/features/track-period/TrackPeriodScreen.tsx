@@ -11,13 +11,21 @@ import StepDone from "./steps/StepDone";
 import StepSuccess from "./steps/StepSuccess";
 
 import { Regularity } from "./types";
-import { saveCycleData, getCycleData, deleteCycleData } from "./storage";
+import {
+  saveCycleData,
+  getCycleData,
+  deleteCycleData,
+} from "./storage";
+
+import {
+  shouldShowCycleGuard,
+  markCycleGuardSeen,
+  resetCycleGuard,
+} from "./cycleGuardStorage";
 
 export default function TrackPeriodScreen() {
   const router = useRouter();
-
   const [step, setStep] = useState(1);
-  const [guardChecked, setGuardChecked] = useState(false);
 
   const [data, setData] = useState({
     cycleLength: 28,
@@ -28,20 +36,16 @@ export default function TrackPeriodScreen() {
   });
 
   /**
-   * 🔐 CYCLE GUARD
-   * Runs when Track tab is focused
+   * 🔐 CYCLE GUARD (persistent, safe)
    */
   useFocusEffect(
     useCallback(() => {
-      if (guardChecked) return;
-
-      const checkExistingCycle = async () => {
+      const runGuard = async () => {
         const existing = await getCycleData();
+        if (!existing) return;
 
-        if (!existing) {
-          setGuardChecked(true);
-          return;
-        }
+        const shouldShow = await shouldShowCycleGuard();
+        if (!shouldShow) return;
 
         Alert.alert(
           "Cycle Data Found",
@@ -50,16 +54,16 @@ export default function TrackPeriodScreen() {
             {
               text: "Keep Existing",
               style: "cancel",
-              onPress: () => {
-                setGuardChecked(true);
+              onPress: async () => {
+                await markCycleGuardSeen();
                 router.replace("/insights");
               },
             },
             {
               text: "Update",
-              onPress: () => {
+              onPress: async () => {
+                await markCycleGuardSeen();
                 setStep(1);
-                setGuardChecked(true);
               },
             },
             {
@@ -67,16 +71,16 @@ export default function TrackPeriodScreen() {
               style: "destructive",
               onPress: async () => {
                 await deleteCycleData();
+                await resetCycleGuard(); // allow fresh entry later
                 setStep(1);
-                setGuardChecked(true);
               },
             },
           ]
         );
       };
 
-      checkExistingCycle();
-    }, [guardChecked])
+      runGuard();
+    }, [])
   );
 
   /**
@@ -87,10 +91,6 @@ export default function TrackPeriodScreen() {
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
-            // 🔄 reset guard so Track refreshes next time
-            setGuardChecked(false);
-            setStep(1);
-
             router.replace("/insights");
           }}
         />
@@ -128,7 +128,10 @@ export default function TrackPeriodScreen() {
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
             onChange={(value) =>
-              setData((prev) => ({ ...prev, periodDuration: value }))
+              setData((prev) => ({
+                ...prev,
+                periodDuration: value,
+              }))
             }
           />
         )}
@@ -167,6 +170,9 @@ export default function TrackPeriodScreen() {
                 regularity: data.regularity,
                 symptoms: data.symptoms,
               });
+
+              // 🔑 reset guard ONLY after data mutation
+              await resetCycleGuard();
 
               setStep(7);
             }}

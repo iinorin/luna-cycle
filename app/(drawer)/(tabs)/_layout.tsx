@@ -1,49 +1,7 @@
-import { Tabs, useRouter } from "expo-router";
-import { Alert } from "react-native";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { getCycleData } from "@/src/features/track-period/storage";
-import { deleteCycleData } from "@/src/features/track-period/storage";
-
 export default function TabsLayout() {
-  const router = useRouter();
-
-  async function handleCalendarPress() {
-    const existingData = await getCycleData();
-
-    // ✅ No data → allow normal flow
-    if (!existingData) {
-      router.push("/calendar");
-      return;
-    }
-
-    // ⚠️ Data exists → warn user
-    Alert.alert(
-      "Cycle data already exists",
-      "You already have cycle data saved. What would you like to do?",
-      [
-        {
-          text: "Keep existing",
-          style: "cancel",
-        },
-        {
-          text: "Delete data",
-          style: "destructive",
-          onPress: async () => {
-            await deleteCycleData();
-            router.push("/calendar");
-          },
-        },
-        {
-          text: "Update",
-          onPress: () => {
-            router.push("/calendar");
-          },
-        },
-      ]
-    );
-  }
-
   return (
     <Tabs
       screenOptions={{
@@ -53,7 +11,7 @@ export default function TabsLayout() {
     >
       {/* CYCLE HOME */}
       <Tabs.Screen
-        name="index"
+        name="cycle"
         options={{
           title: "Cycle",
           tabBarIcon: ({ color, size }) => (
@@ -71,12 +29,6 @@ export default function TabsLayout() {
             <Ionicons name="calendar" size={size} color={color} />
           ),
         }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault(); // ⛔ stop default navigation
-            handleCalendarPress(); // ✅ custom logic
-          },
-        }}
       />
 
       {/* INSIGHTS */}
@@ -85,11 +37,7 @@ export default function TabsLayout() {
         options={{
           title: "Insights",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="stats-chart"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="stats-chart" size={size} color={color} />
           ),
         }}
       />
