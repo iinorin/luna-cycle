@@ -1,25 +1,17 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
 
-const KEY = "cycle-data";
-
-export type CycleData = {
-  lastPeriodDate: string;
+type CycleData = {
   cycleLength: number;
+  lastPeriod: Date;
   periodDuration: number;
-  regularity: "regular" | "sometimes" | "irregular";
-  symptoms: string[];
 };
 
-export async function saveCycleData(data: CycleData) {
-  await AsyncStorage.setItem(KEY, JSON.stringify(data));
-}
+type CycleStore = {
+  cycle: CycleData | null;
+  setCycle: (data: CycleData) => void;
+};
 
-export async function getCycleData(): Promise<CycleData | null> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return null;
-  return JSON.parse(raw);
-}
-
-export async function clearCycleData() {
-  await AsyncStorage.removeItem(KEY);
-}
+export const useCycleStore = create<CycleStore>((set) => ({
+  cycle: null,
+  setCycle: (data) => set({ cycle: data }),
+}));

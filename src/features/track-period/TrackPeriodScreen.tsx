@@ -30,7 +30,9 @@ export default function TrackPeriodScreen() {
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
-            router.replace("/(tabs)/insights" as any);
+            // router.replace("/(tabs)/insights" as any);
+            router.replace("/insights");
+
             console.log("SAVE PRESSED");
           }}
         />
