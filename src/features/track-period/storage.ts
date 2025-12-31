@@ -7,24 +7,42 @@ const CYCLE_DATA_KEY = "cycle_data";
 
 /**
  * Shape of saved cycle data
- * This MUST match what TrackPeriodScreen saves
+ * Matches TrackPeriodScreen data
  */
 export type CycleData = {
   cycleLength: number;       // days
   lastPeriod: string;        // ISO date string
   periodDuration: number;    // days
-  regularity: string;        // "regular" | "irregular" | etc
-  symptoms: string[];        // ["cramps", "headache"]
+
+  // ✅ relaxed type (no breaking changes)
+  regularity: string;
+
+  symptoms: string[];
+
+  // ✅ timestamps
+  createdAt: string;         // ISO date
+  updatedAt: string;         // ISO date
 };
 
 /**
  * Save cycle data
  */
-export async function saveCycleData(data: CycleData): Promise<void> {
+export async function saveCycleData(
+  data: Omit<CycleData, "createdAt" | "updatedAt">
+): Promise<void> {
   try {
+    const existing = await getCycleData();
+    const now = new Date().toISOString();
+
+    const payload: CycleData = {
+      ...data,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+
     await AsyncStorage.setItem(
       CYCLE_DATA_KEY,
-      JSON.stringify(data)
+      JSON.stringify(payload)
     );
   } catch (error) {
     console.error("Failed to save cycle data", error);
@@ -38,8 +56,6 @@ export async function getCycleData(): Promise<CycleData | null> {
   try {
     const stored = await AsyncStorage.getItem(CYCLE_DATA_KEY);
     if (!stored) return null;
-    console.log("Stored cycle data:", stored);
-
     return JSON.parse(stored) as CycleData;
   } catch (error) {
     console.error("Failed to get cycle data", error);
@@ -48,12 +64,12 @@ export async function getCycleData(): Promise<CycleData | null> {
 }
 
 /**
- * Clear cycle data (optional – useful for reset/debug)
+ * Delete cycle data
  */
-export async function clearCycleData(): Promise<void> {
+export async function deleteCycleData(): Promise<void> {
   try {
     await AsyncStorage.removeItem(CYCLE_DATA_KEY);
-  } catch (error) {
-    console.error("Failed to clear cycle data", error);
+  } catch (e) {
+    console.error("Failed to delete cycle data", e);
   }
 }
