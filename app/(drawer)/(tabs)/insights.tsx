@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Dimensions,
   Animated,
+  ScrollView,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import { useFocusEffect } from "expo-router";
 
 import { getCycleData, CycleData } from "@/src/features/track-period/storage";
 import { calculateCycleInfo } from "@/src/cycle/calculations";
@@ -19,18 +21,29 @@ export default function InsightsScreen() {
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    load();
-  }, []);
+  /**
+   * 🔄 Refresh every time screen is focused
+   */
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [])
+  );
 
   async function load() {
     const data = await getCycleData();
-    if (!data) return;
+
+    if (!data) {
+      setCycle(null);
+      setCycleInfo(null);
+      return;
+    }
 
     const info = calculateCycleInfo(data);
     setCycle(data);
     setCycleInfo(info);
 
+    progressAnim.setValue(0);
     Animated.timing(progressAnim, {
       toValue: info.cycleDay / data.cycleLength,
       duration: 900,
@@ -72,16 +85,18 @@ export default function InsightsScreen() {
   const currentPhase =
     cycleInfo.cycleDay <= cycle.periodDuration
       ? "🌸 Menstrual Phase — Rest & recharge"
-      : cycleInfo.cycleDay <
-        cycleInfo.fertileWindow.startDay
+      : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
       ? "🌱 Follicular Phase — Energy rising"
-      : cycleInfo.cycleDay <=
-        cycleInfo.fertileWindow.endDay
+      : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
       ? "🔥 Ovulation Phase — Peak confidence"
       : "🌙 Luteal Phase — Slow & reflect";
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       {/* HEADER */}
       <Text style={styles.title}>📊 Cycle Insights</Text>
       <Text style={styles.subtitle}>
@@ -91,10 +106,8 @@ export default function InsightsScreen() {
       {/* PROGRESS */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🌀 Cycle Progress</Text>
-
         <Text style={styles.value}>
-          Day {cycleInfo.cycleDay} of{" "}
-          {cycle.cycleLength}
+          Day {cycleInfo.cycleDay} of {cycle.cycleLength}
         </Text>
 
         <View style={styles.progressTrack}>
@@ -110,18 +123,14 @@ export default function InsightsScreen() {
       {/* INFO ROW */}
       <View style={styles.infoRow}>
         <View style={[styles.card, styles.halfCard]}>
-          <Text style={styles.cardTitle}>
-            🩸 Next Period
-          </Text>
+          <Text style={styles.cardTitle}>🩸 Next Period</Text>
           <Text style={styles.value}>
             {cycleInfo.nextPeriod.toDateString()}
           </Text>
         </View>
 
         <View style={[styles.card, styles.halfCard]}>
-          <Text style={styles.cardTitle}>
-            🔥 Fertile Window
-          </Text>
+          <Text style={styles.cardTitle}>🔥 Fertile Window</Text>
           <Text style={styles.value}>
             Day {cycleInfo.fertileWindow.startDay} –{" "}
             {cycleInfo.fertileWindow.endDay}
@@ -131,9 +140,7 @@ export default function InsightsScreen() {
 
       {/* GRAPH */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>
-          📈 Cycle Overview
-        </Text>
+        <Text style={styles.cardTitle}>📈 Cycle Overview</Text>
 
         <LineChart
           data={{
@@ -166,25 +173,44 @@ export default function InsightsScreen() {
         </Text>
       </View>
 
-      {/* CURRENT PHASE CARD */}
+      {/* CURRENT PHASE */}
       <View style={[styles.card, styles.softCard]}>
-        <Text style={styles.cardTitle}>
-          💫 Current Phase
+        <Text style={styles.cardTitle}>💫 Current Phase</Text>
+        <Text style={styles.phaseText}>{currentPhase}</Text>
+      </View>
+
+      {/* CREATED / UPDATED */}
+      <View style={[styles.card, styles.softCard]}>
+        <Text style={styles.cardTitle}>🕒 Cycle History</Text>
+
+        <Text style={styles.meta}>
+          Created:{" "}
+          {cycle.createdAt
+            ? new Date(cycle.createdAt).toDateString()
+            : "—"}
         </Text>
-        <Text style={styles.phaseText}>
-          {currentPhase}
+
+        <Text style={styles.meta}>
+          Last Updated:{" "}
+          {cycle.updatedAt
+            ? new Date(cycle.updatedAt).toDateString()
+            : "—"}
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#12002b",
     paddingTop: 60,
     paddingHorizontal: 16,
-    backgroundColor: "#12002b",
+  },
+
+  scrollContent: {
+    paddingBottom: 40,
   },
 
   center: {
@@ -275,5 +301,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#4c1d95",
+  },
+
+  meta: {
+    fontSize: 13,
+    color: "#4b5563",
+    marginTop: 4,
   },
 });

@@ -1,6 +1,6 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 
 import StepCycleLength from "./steps/StepCycleLength";
 import StepLastPeriod from "./steps/StepLastPeriod";
@@ -11,17 +11,13 @@ import StepDone from "./steps/StepDone";
 import StepSuccess from "./steps/StepSuccess";
 
 import { Regularity } from "./types";
-import { saveCycleData } from "./storage";
+import { saveCycleData, getCycleData, deleteCycleData } from "./storage";
 
-/**
- * TrackPeriodScreen
- * -----------------
- * Collects user cycle data step-by-step
- * Saves data to local storage on final submit
- */
 export default function TrackPeriodScreen() {
   const router = useRouter();
+
   const [step, setStep] = useState(1);
+  const [guardChecked, setGuardChecked] = useState(false);
 
   const [data, setData] = useState({
     cycleLength: 28,
@@ -32,14 +28,69 @@ export default function TrackPeriodScreen() {
   });
 
   /**
+   * 🔐 CYCLE GUARD
+   * Runs when Track tab is focused
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (guardChecked) return;
+
+      const checkExistingCycle = async () => {
+        const existing = await getCycleData();
+
+        if (!existing) {
+          setGuardChecked(true);
+          return;
+        }
+
+        Alert.alert(
+          "Cycle Data Found",
+          "You already have cycle data saved. What would you like to do?",
+          [
+            {
+              text: "Keep Existing",
+              style: "cancel",
+              onPress: () => {
+                setGuardChecked(true);
+                router.replace("/insights");
+              },
+            },
+            {
+              text: "Update",
+              onPress: () => {
+                setStep(1);
+                setGuardChecked(true);
+              },
+            },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                await deleteCycleData();
+                setStep(1);
+                setGuardChecked(true);
+              },
+            },
+          ]
+        );
+      };
+
+      checkExistingCycle();
+    }, [guardChecked])
+  );
+
+  /**
    * SUCCESS STEP
-   * Render full screen without content padding
    */
   if (step === 7) {
     return (
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
+            // 🔄 reset guard so Track refreshes next time
+            setGuardChecked(false);
+            setStep(1);
+
             router.replace("/insights");
           }}
         />
@@ -50,7 +101,6 @@ export default function TrackPeriodScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.content}>
-        {/* STEP 1 – Cycle Length */}
         {step === 1 && (
           <StepCycleLength
             value={data.cycleLength}
@@ -61,7 +111,6 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* STEP 2 – Last Period */}
         {step === 2 && (
           <StepLastPeriod
             value={data.lastPeriod}
@@ -73,7 +122,6 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* STEP 3 – Period Duration */}
         {step === 3 && (
           <StepPeriodDuration
             value={data.periodDuration}
@@ -85,7 +133,6 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* STEP 4 – Regularity */}
         {step === 4 && (
           <StepRegularity
             value={data.regularity}
@@ -97,7 +144,6 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* STEP 5 – Symptoms */}
         {step === 5 && (
           <StepSymptoms
             value={data.symptoms}
@@ -109,15 +155,11 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* STEP 6 – Review & Save */}
         {step === 6 && (
           <StepDone
             data={data}
             onEdit={(stepNumber) => setStep(stepNumber)}
             onSave={async () => {
-              console.log("Saving cycle data:", data);
-
-              // ✅ Persist data to local storage
               await saveCycleData({
                 cycleLength: data.cycleLength,
                 lastPeriod: data.lastPeriod.toISOString(),
