@@ -3,15 +3,22 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import StepCycleLength from "./steps/StepCycleLength";
-import StepDone from "./steps/StepDone";
 import StepLastPeriod from "./steps/StepLastPeriod";
 import StepPeriodDuration from "./steps/StepPeriodDuration";
 import StepRegularity from "./steps/StepRegularity";
-import StepSuccess from "./steps/StepSuccess";
 import StepSymptoms from "./steps/StepSymptoms";
+import StepDone from "./steps/StepDone";
+import StepSuccess from "./steps/StepSuccess";
 
 import { Regularity } from "./types";
+import { saveCycleData } from "./storage";
 
+/**
+ * TrackPeriodScreen
+ * -----------------
+ * Collects user cycle data step-by-step
+ * Saves data to local storage on final submit
+ */
 export default function TrackPeriodScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -24,16 +31,16 @@ export default function TrackPeriodScreen() {
     symptoms: [] as string[],
   });
 
-  // SUCCESS STEP - render outside the content padding
+  /**
+   * SUCCESS STEP
+   * Render full screen without content padding
+   */
   if (step === 7) {
     return (
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
-            // router.replace("/(tabs)/insights" as any);
             router.replace("/insights");
-
-            console.log("SAVE PRESSED");
           }}
         />
       </View>
@@ -43,6 +50,7 @@ export default function TrackPeriodScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.content}>
+        {/* STEP 1 – Cycle Length */}
         {step === 1 && (
           <StepCycleLength
             value={data.cycleLength}
@@ -53,6 +61,7 @@ export default function TrackPeriodScreen() {
           />
         )}
 
+        {/* STEP 2 – Last Period */}
         {step === 2 && (
           <StepLastPeriod
             value={data.lastPeriod}
@@ -64,6 +73,7 @@ export default function TrackPeriodScreen() {
           />
         )}
 
+        {/* STEP 3 – Period Duration */}
         {step === 3 && (
           <StepPeriodDuration
             value={data.periodDuration}
@@ -75,6 +85,7 @@ export default function TrackPeriodScreen() {
           />
         )}
 
+        {/* STEP 4 – Regularity */}
         {step === 4 && (
           <StepRegularity
             value={data.regularity}
@@ -86,6 +97,7 @@ export default function TrackPeriodScreen() {
           />
         )}
 
+        {/* STEP 5 – Symptoms */}
         {step === 5 && (
           <StepSymptoms
             value={data.symptoms}
@@ -97,14 +109,24 @@ export default function TrackPeriodScreen() {
           />
         )}
 
-        {/* REVIEW STEP */}
+        {/* STEP 6 – Review & Save */}
         {step === 6 && (
           <StepDone
             data={data}
             onEdit={(stepNumber) => setStep(stepNumber)}
-            onSave={() => {
-              // ✅ SAVE LOGIC GOES HERE (later)
-              setStep(7); // move to success
+            onSave={async () => {
+              console.log("Saving cycle data:", data);
+
+              // ✅ Persist data to local storage
+              await saveCycleData({
+                cycleLength: data.cycleLength,
+                lastPeriod: data.lastPeriod.toISOString(),
+                periodDuration: data.periodDuration,
+                regularity: data.regularity,
+                symptoms: data.symptoms,
+              });
+
+              setStep(7);
             }}
           />
         )}
