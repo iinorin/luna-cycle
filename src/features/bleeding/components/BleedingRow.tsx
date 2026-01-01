@@ -19,8 +19,8 @@ export default function BleedingRow({ day }: BleedingRowProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.card}>
-        <Text style={styles.title}>🩸 Bleeding</Text>
-        <Text style={styles.subtitle}>Day {day}</Text>
+        <Text style={styles.title}>Bleeding</Text>
+        <Text style={styles.subtitle}>Today • Day {day}</Text>
 
         <View style={styles.row}>
           {LEVELS.map((item, index) => {
@@ -35,11 +35,11 @@ export default function BleedingRow({ day }: BleedingRowProps) {
                   isActive && styles.activeOption,
                 ]}
               >
-                <View style={styles.drops}>
+                <View style={styles.iconRow}>
                   {Array.from({ length: item.drops }).map((_, i) => (
                     <Droplet
                       key={i}
-                      size={16}
+                      size={18}
                       color={isActive ? "#F43F5E" : "#9CA3AF"}
                       fill={isActive ? "#F43F5E" : "transparent"}
                     />
@@ -47,6 +47,8 @@ export default function BleedingRow({ day }: BleedingRowProps) {
                 </View>
 
                 <Text
+                  numberOfLines={1}
+                  ellipsizeMode="clip"
                   style={[
                     styles.label,
                     isActive && styles.activeLabel,
@@ -70,56 +72,56 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 22,
-    padding: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: "#111827",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
 
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "600",
     color: "#FEE2E2",
   },
 
   subtitle: {
-    fontSize: 13,
-    color: "#CBD5F5",
-    marginBottom: 14,
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginBottom: 16,
   },
 
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 10,
   },
 
   option: {
-    flex: 1,
+    width: 72,
     alignItems: "center",
     paddingVertical: 14,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 16,
+    backgroundColor: "#0F172A",
   },
 
   activeOption: {
-    backgroundColor: "rgba(244,63,94,0.18)",
+    backgroundColor: "rgba(244,63,94,0.2)",
     shadowColor: "#F43F5E",
     shadowOpacity: 0.35,
-    shadowRadius: 10,
+    shadowRadius: 8,
     elevation: 4,
   },
 
-  drops: {
+  iconRow: {
     flexDirection: "row",
     marginBottom: 6,
-    gap: 2,
+    minHeight: 22,
   },
 
   label: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#CBD5F5",
+    textAlign: "center",
   },
 
   activeLabel: {
