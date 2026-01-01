@@ -1,9 +1,12 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { useState } from "react";
-import { Droplet } from "lucide-react-native";
+import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+import { Droplet, CheckCircle2 } from "lucide-react-native";
 
 type BleedingRowProps = {
   day: number;
+  isPeriodDay: boolean;
 };
 
 const LEVELS = [
@@ -13,26 +16,68 @@ const LEVELS = [
   { label: "Heavy", drops: 3 },
 ];
 
-export default function BleedingRow({ day }: BleedingRowProps) {
-  const [level, setLevel] = useState<number>(0);
+export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
+  const [level, setLevel] = useState(0);
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  /* 🔴 Pulse animation for STOP button */
+  useEffect(() => {
+    if (!isPeriodDay) return;
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.06,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [isPeriodDay]);
+
+  const CardWrapper = isPeriodDay ? View : BlurView;
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Bleeding</Text>
-        <Text style={styles.subtitle}>Today • Day {day}</Text>
+      <CardWrapper
+        intensity={25}
+        tint="dark"
+        style={[
+          styles.card,
+          !isPeriodDay && styles.disabledCard,
+        ]}
+      >
+        {/* 🩸 Blood Gradient */}
+        <LinearGradient
+          colors={["rgba(244,63,94,0.35)", "rgba(244,63,94,0.08)", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
+        <Text style={styles.title}>Bleeding</Text>
+        <Text style={styles.subtitle}>
+          {isPeriodDay ? `Today • Day ${day}` : "Outside period days"}
+        </Text>
+
+        {/* 💧 Bleeding Level */}
         <View style={styles.row}>
           {LEVELS.map((item, index) => {
-            const isActive = level === index;
+            const active = level === index;
 
             return (
               <Pressable
                 key={item.label}
+                disabled={!isPeriodDay}
                 onPress={() => setLevel(index)}
                 style={[
                   styles.option,
-                  isActive && styles.activeOption,
+                  active && styles.activeOption,
                 ]}
               >
                 <View style={styles.iconRow}>
@@ -40,27 +85,28 @@ export default function BleedingRow({ day }: BleedingRowProps) {
                     <Droplet
                       key={i}
                       size={18}
-                      color={isActive ? "#F43F5E" : "#9CA3AF"}
-                      fill={isActive ? "#F43F5E" : "transparent"}
+                      color={active ? "#F43F5E" : "#9CA3AF"}
+                      fill={active ? "#F43F5E" : "transparent"}
                     />
                   ))}
                 </View>
 
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="clip"
-                  style={[
-                    styles.label,
-                    isActive && styles.activeLabel,
-                  ]}
-                >
-                  {item.label}
-                </Text>
+                <Text style={styles.label}>{item.label}</Text>
               </Pressable>
             );
           })}
         </View>
-      </View>
+
+        {/* ✅ HAS BLEEDING STOPPED */}
+        {isPeriodDay && (
+          <Animated.View style={{ transform: [{ scale: pulse }] }}>
+            <Pressable style={styles.stopButton}>
+              <CheckCircle2 size={18} color="#fff" />
+              <Text style={styles.stopText}>Has bleeding stopped?</Text>
+            </Pressable>
+          </Animated.View>
+        )}
+      </CardWrapper>
     </View>
   );
 }
@@ -72,11 +118,14 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 20,
+    overflow: "hidden",
     backgroundColor: "#111827",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+  },
+
+  disabledCard: {
+    opacity: 0.45,
   },
 
   title: {
@@ -105,11 +154,7 @@ const styles = StyleSheet.create({
   },
 
   activeOption: {
-    backgroundColor: "rgba(244,63,94,0.2)",
-    shadowColor: "#F43F5E",
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: "rgba(244,63,94,0.25)",
   },
 
   iconRow: {
@@ -121,11 +166,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     color: "#CBD5F5",
-    textAlign: "center",
   },
 
-  activeLabel: {
-    color: "#FEE2E2",
+  stopButton: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: "#F43F5E",
+  },
+
+  stopText: {
+    color: "#fff",
     fontWeight: "600",
+    fontSize: 14,
   },
 });

@@ -29,7 +29,11 @@ export default function HomeScreen() {
         />
 
         {/* 🩸 BLEEDING TRACKER */}
-        <BleedingRow day={currentDay} />
+        <BleedingRow
+          day={currentDay}
+          isPeriodDay={currentDay <= periodLength}
+        />
+
       </View>
     </View>
   );
