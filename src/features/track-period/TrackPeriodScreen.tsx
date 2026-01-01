@@ -46,6 +46,8 @@ export default function TrackPeriodScreen() {
   useFocusEffect(
     useCallback(() => {
       const runGuard = async () => {
+        await resetCycleGuard();
+
         const existing = await getCycleData();
         if (!existing) return;
 
