@@ -8,6 +8,8 @@ import {
   getPhaseForDay,
 } from "@/src/cycle/state";
 
+import BleedingRow from "@/src/features/bleeding/components/BleedingRow";
+
 export default function HomeScreen() {
   const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
   const periodLength = DEFAULT_CYCLE_STATE.periodLength;
@@ -25,6 +27,9 @@ export default function HomeScreen() {
           periodLength={periodLength}
           currentDay={currentDay}
         />
+
+        {/* 🩸 BLEEDING TRACKER */}
+        <BleedingRow day={currentDay} />
       </View>
     </View>
   );
