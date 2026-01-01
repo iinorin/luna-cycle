@@ -1,64 +1,129 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useState } from "react";
+import { Droplet } from "lucide-react-native";
 
 type BleedingRowProps = {
   day: number;
 };
 
+const LEVELS = [
+  { label: "None", drops: 0 },
+  { label: "Light", drops: 1 },
+  { label: "Medium", drops: 2 },
+  { label: "Heavy", drops: 3 },
+];
+
 export default function BleedingRow({ day }: BleedingRowProps) {
-  const [level, setLevel] = useState<0 | 1 | 2 | 3>(0);
+  const [level, setLevel] = useState<number>(0);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bleeding – Day {day}</Text>
+    <View style={styles.wrapper}>
+      <View style={styles.card}>
+        <Text style={styles.title}>🩸 Bleeding</Text>
+        <Text style={styles.subtitle}>Day {day}</Text>
 
-      <View style={styles.row}>
-        {(["None", "Light", "Medium", "Heavy"] as const).map((label, index) => {
-          const isActive = level === index;
+        <View style={styles.row}>
+          {LEVELS.map((item, index) => {
+            const isActive = level === index;
 
-          return (
-            <Pressable
-              key={label}
-              onPress={() => setLevel(index as 0 | 1 | 2 | 3)}
-              style={[
-                styles.button,
-                isActive && styles.activeButton,
-              ]}
-            >
-              <Text style={styles.text}>{label}</Text>
-            </Pressable>
-          );
-        })}
+            return (
+              <Pressable
+                key={item.label}
+                onPress={() => setLevel(index)}
+                style={[
+                  styles.option,
+                  isActive && styles.activeOption,
+                ]}
+              >
+                <View style={styles.drops}>
+                  {Array.from({ length: item.drops }).map((_, i) => (
+                    <Droplet
+                      key={i}
+                      size={16}
+                      color={isActive ? "#F43F5E" : "#9CA3AF"}
+                      fill={isActive ? "#F43F5E" : "transparent"}
+                    />
+                  ))}
+                </View>
+
+                <Text
+                  style={[
+                    styles.label,
+                    isActive && styles.activeLabel,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 24,
+  wrapper: {
     paddingHorizontal: 16,
+    marginTop: 24,
   },
+
+  card: {
+    borderRadius: 22,
+    padding: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+
   title: {
-    color: "#E5E7EB",
-    fontSize: 16,
-    marginBottom: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#FEE2E2",
   },
+
+  subtitle: {
+    fontSize: 13,
+    color: "#CBD5F5",
+    marginBottom: 14,
+  },
+
   row: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
+    gap: 10,
   },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.08)",
+
+  option: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
-  activeButton: {
-    backgroundColor: "rgba(239,68,68,0.35)",
+
+  activeOption: {
+    backgroundColor: "rgba(244,63,94,0.18)",
+    shadowColor: "#F43F5E",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  text: {
-    color: "#E5E7EB",
-    fontSize: 13,
+
+  drops: {
+    flexDirection: "row",
+    marginBottom: 6,
+    gap: 2,
+  },
+
+  label: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+
+  activeLabel: {
+    color: "#FEE2E2",
+    fontWeight: "600",
   },
 });
