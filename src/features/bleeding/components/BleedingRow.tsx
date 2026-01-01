@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Droplet, CheckCircle2 } from "lucide-react-native";
+import { getBleedingData, saveBleedingEntry } from "../storage";
 
 type BleedingRowProps = {
   day: number;
@@ -20,7 +21,17 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
   const [level, setLevel] = useState(0);
   const pulse = useRef(new Animated.Value(1)).current;
 
-  /* 🔴 Pulse animation for STOP button */
+  /* 🔄 Load saved bleeding level */
+  useEffect(() => {
+    (async () => {
+      const data = await getBleedingData();
+      if (data[day]) {
+        setLevel(data[day].level);
+      }
+    })();
+  }, [day]);
+
+  /* 🔴 Pulse animation */
   useEffect(() => {
     if (!isPeriodDay) return;
 
@@ -42,6 +53,16 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
 
   const CardWrapper = isPeriodDay ? View : BlurView;
 
+  function handleSelect(index: number) {
+    setLevel(index);
+    saveBleedingEntry(day, index);
+  }
+
+  function handleStopped() {
+    setLevel(0);
+    saveBleedingEntry(day, 0);
+  }
+
   return (
     <View style={styles.wrapper}>
       <CardWrapper
@@ -52,11 +73,13 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
           !isPeriodDay && styles.disabledCard,
         ]}
       >
-        {/* 🩸 Blood Gradient */}
+        {/* 🩸 Gradient */}
         <LinearGradient
-          colors={["rgba(244,63,94,0.35)", "rgba(244,63,94,0.08)", "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={[
+            "rgba(244,63,94,0.35)",
+            "rgba(244,63,94,0.08)",
+            "transparent",
+          ]}
           style={StyleSheet.absoluteFill}
         />
 
@@ -65,7 +88,7 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
           {isPeriodDay ? `Today • Day ${day}` : "Outside period days"}
         </Text>
 
-        {/* 💧 Bleeding Level */}
+        {/* 💧 LEVELS */}
         <View style={styles.row}>
           {LEVELS.map((item, index) => {
             const active = level === index;
@@ -74,7 +97,7 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
               <Pressable
                 key={item.label}
                 disabled={!isPeriodDay}
-                onPress={() => setLevel(index)}
+                onPress={() => handleSelect(index)}
                 style={[
                   styles.option,
                   active && styles.activeOption,
@@ -90,19 +113,23 @@ export default function BleedingRow({ day, isPeriodDay }: BleedingRowProps) {
                     />
                   ))}
                 </View>
-
                 <Text style={styles.label}>{item.label}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* ✅ HAS BLEEDING STOPPED */}
+        {/* ✅ STOPPED */}
         {isPeriodDay && (
           <Animated.View style={{ transform: [{ scale: pulse }] }}>
-            <Pressable style={styles.stopButton}>
+            <Pressable
+              style={styles.stopButton}
+              onPress={handleStopped}
+            >
               <CheckCircle2 size={18} color="#fff" />
-              <Text style={styles.stopText}>Has bleeding stopped?</Text>
+              <Text style={styles.stopText}>
+                Has bleeding stopped?
+              </Text>
             </Pressable>
           </Animated.View>
         )}
@@ -116,35 +143,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 24,
   },
-
   card: {
     borderRadius: 22,
     padding: 20,
     overflow: "hidden",
     backgroundColor: "#111827",
   },
-
   disabledCard: {
     opacity: 0.45,
   },
-
   title: {
     fontSize: 17,
     fontWeight: "600",
     color: "#FEE2E2",
   },
-
   subtitle: {
     fontSize: 12,
     color: "#9CA3AF",
     marginBottom: 16,
   },
-
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
-
   option: {
     width: 72,
     alignItems: "center",
@@ -152,22 +173,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: "#0F172A",
   },
-
   activeOption: {
     backgroundColor: "rgba(244,63,94,0.25)",
   },
-
   iconRow: {
     flexDirection: "row",
     marginBottom: 6,
     minHeight: 22,
   },
-
   label: {
     fontSize: 12,
     color: "#CBD5F5",
   },
-
   stopButton: {
     marginTop: 18,
     flexDirection: "row",
@@ -178,7 +195,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: "#F43F5E",
   },
-
   stopText: {
     color: "#fff",
     fontWeight: "600",
