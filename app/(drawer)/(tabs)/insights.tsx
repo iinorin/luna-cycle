@@ -7,17 +7,34 @@ import {
   Animated,
   ScrollView,
 } from "react-native";
-import { LineChart } from "react-native-chart-kit";
+import {
+  LineChart,
+  PieChart,
+  BarChart,
+} from "react-native-chart-kit";
 import { useFocusEffect } from "expo-router";
 
 import { getCycleData, CycleData } from "@/src/features/track-period/storage";
 import { calculateCycleInfo } from "@/src/cycle/calculations";
+
+import {
+  getBleedingStore,
+} from "@/src/features/bleeding/storage";
+
+
+import {
+  groupByMonth,
+  getMonthlyPieData,
+  getMonthlyBarValue,
+} from "@/src/features/bleeding/utils";
+
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function InsightsScreen() {
   const [cycle, setCycle] = useState<CycleData | null>(null);
   const [cycleInfo, setCycleInfo] = useState<any>(null);
+  const [bleedingStore, setBleedingStore] = useState<any>({});
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -32,6 +49,9 @@ export default function InsightsScreen() {
 
   async function load() {
     const data = await getCycleData();
+    const bleeding = await getBleedingStore();
+
+    console.log("🩸 Bleeding data loaded in Insights:", bleeding);
 
     if (!data) {
       setCycle(null);
@@ -42,6 +62,7 @@ export default function InsightsScreen() {
     const info = calculateCycleInfo(data);
     setCycle(data);
     setCycleInfo(info);
+    setBleedingStore(bleeding);
 
     progressAnim.setValue(0);
     Animated.timing(progressAnim, {
@@ -59,7 +80,7 @@ export default function InsightsScreen() {
     );
   }
 
-  /** Graph data */
+  /** Existing graph data */
   const days = Array.from(
     { length: cycle.cycleLength },
     (_, i) => i + 1
@@ -81,15 +102,35 @@ export default function InsightsScreen() {
     outputRange: ["0%", "100%"],
   });
 
-  /** Current phase text */
   const currentPhase =
     cycleInfo.cycleDay <= cycle.periodDuration
       ? "🌸 Menstrual Phase — Rest & recharge"
       : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
-      ? "🌱 Follicular Phase — Energy rising"
-      : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
-      ? "🔥 Ovulation Phase — Peak confidence"
-      : "🌙 Luteal Phase — Slow & reflect";
+        ? "🌱 Follicular Phase — Energy rising"
+        : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
+          ? "🔥 Ovulation Phase — Peak confidence"
+          : "🌙 Luteal Phase — Slow & reflect";
+
+  /* =========================
+     🩸 BLEEDING INSIGHTS DATA
+     ========================= */
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const currentMonthData = bleedingStore[currentMonth] || {};
+
+  const pieCounts = getMonthlyPieData(currentMonthData);
+
+  const pieData = [
+    { name: "None", count: pieCounts[0], color: "#e5e7eb" },
+    { name: "Light", count: pieCounts[1], color: "#fecdd3" },
+    { name: "Medium", count: pieCounts[2], color: "#fb7185" },
+    { name: "Heavy", count: pieCounts[3], color: "#e11d48" },
+  ].filter((d) => d.count > 0);
+
+  const months = Object.keys(bleedingStore).sort();
+  const barScores = months.map((m) =>
+    getMonthlyBarValue(bleedingStore[m])
+  );
 
   return (
     <ScrollView
@@ -97,13 +138,13 @@ export default function InsightsScreen() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* HEADER */}
+      {/* ===== ORIGINAL CONTENT (UNCHANGED) ===== */}
+
       <Text style={styles.title}>📊 Cycle Insights</Text>
       <Text style={styles.subtitle}>
         Understanding your rhythm ✨
       </Text>
 
-      {/* PROGRESS */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🌀 Cycle Progress</Text>
         <Text style={styles.value}>
@@ -120,7 +161,6 @@ export default function InsightsScreen() {
         </View>
       </View>
 
-      {/* INFO ROW */}
       <View style={styles.infoRow}>
         <View style={[styles.card, styles.halfCard]}>
           <Text style={styles.cardTitle}>🩸 Next Period</Text>
@@ -138,7 +178,6 @@ export default function InsightsScreen() {
         </View>
       </View>
 
-      {/* GRAPH */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>📈 Cycle Overview</Text>
 
@@ -173,29 +212,89 @@ export default function InsightsScreen() {
         </Text>
       </View>
 
-      {/* CURRENT PHASE */}
       <View style={[styles.card, styles.softCard]}>
         <Text style={styles.cardTitle}>💫 Current Phase</Text>
         <Text style={styles.phaseText}>{currentPhase}</Text>
       </View>
 
-      {/* CREATED / UPDATED */}
       <View style={[styles.card, styles.softCard]}>
         <Text style={styles.cardTitle}>🕒 Cycle History</Text>
-
         <Text style={styles.meta}>
           Created:{" "}
           {cycle.createdAt
             ? new Date(cycle.createdAt).toDateString()
             : "—"}
         </Text>
-
         <Text style={styles.meta}>
           Last Updated:{" "}
           {cycle.updatedAt
             ? new Date(cycle.updatedAt).toDateString()
             : "—"}
         </Text>
+      </View>
+
+      {/* ===== 🩸 NEW BLEEDING INSIGHTS (ADDED BELOW) ===== */}
+
+      <Text style={styles.sectionTitle}>🩸 Bleeding Insights</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Bleeding Distribution (This Month)
+        </Text>
+
+        {pieData.length ? (
+          <PieChart
+            data={pieData.map((d) => ({
+              name: d.name,
+              population: d.count,
+              color: d.color,
+              legendFontColor: "#374151",
+              legendFontSize: 12,
+            }))}
+            width={screenWidth - 48}
+            height={220}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            chartConfig={{ color: () => "#000" }}
+          />
+        ) : (
+          <Text style={styles.emptyText}>
+            No bleeding data for this month
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Monthly Bleeding Overview
+        </Text>
+
+        {barScores.length ? (
+          <BarChart
+            data={{
+              labels: months,
+              datasets: [{ data: barScores }],
+            }}
+            width={screenWidth - 48}
+            height={220}
+            yAxisLabel=""
+            yAxisSuffix=""
+            chartConfig={{
+              backgroundGradientFrom: "#0F172A",
+              backgroundGradientTo: "#020617",
+              decimalPlaces: 1,
+              color: (o = 1) => `rgba(244, 63, 94, ${o})`,
+              labelColor: () => "#E5E7EB",
+            }}
+            style={{ borderRadius: 16 }}
+          />
+
+        ) : (
+          <Text style={styles.emptyText}>
+            No monthly bleeding data yet
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -225,6 +324,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  emptyText: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 8,
+  },
+
   title: {
     fontSize: 26,
     fontWeight: "800",
@@ -235,6 +340,13 @@ const styles = StyleSheet.create({
     color: "#e9d5ff",
     marginBottom: 22,
     fontSize: 14,
+  },
+
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#fff",
+    marginVertical: 16,
   },
 
   infoRow: {

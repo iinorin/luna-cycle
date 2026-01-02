@@ -1,31 +1,31 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BLEEDING_KEY = "bleeding_entries";
+const KEY = "BLEEDING_DATA";
 
 export type BleedingEntry = {
-  level: number;
+  level: number; // 0-3
+  stopped: boolean;
 };
 
-export async function getBleedingData(): Promise<
-  Record<string, BleedingEntry>
-> {
-  const raw = await AsyncStorage.getItem(BLEEDING_KEY);
+export type BleedingStore = Record<string, BleedingEntry>;
+
+export async function getBleedingStore(): Promise<BleedingStore> {
+  const raw = await AsyncStorage.getItem(KEY);
   return raw ? JSON.parse(raw) : {};
 }
 
-export async function saveBleedingEntry(
-  day: number,
-  level: number
-) {
-  const existing = await getBleedingData();
+export async function saveBleedingEntry(params: {
+  date: Date;
+  level: number;
+  stopped: boolean;
+}) {
+  const store = await getBleedingStore();
+  const key = params.date.toISOString().slice(0, 10);
 
-  const updated = {
-    ...existing,
-    [day]: { level },
+  store[key] = {
+    level: params.level,
+    stopped: params.stopped,
   };
 
-  await AsyncStorage.setItem(
-    BLEEDING_KEY,
-    JSON.stringify(updated)
-  );
+  await AsyncStorage.setItem(KEY, JSON.stringify(store));
 }
