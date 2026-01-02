@@ -1,8 +1,8 @@
-import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated, Alert } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { Droplet, CheckCircle2 } from "lucide-react-native";
+import { Droplet, CheckCircle2, Save } from "lucide-react-native";
 
 import {
   getBleedingStore,
@@ -26,50 +26,56 @@ export default function BleedingRow({
   isPeriodDay,
 }: BleedingRowProps) {
   const [level, setLevel] = useState(0);
+  const [stopped, setStopped] = useState(false);
   const pulse = useRef(new Animated.Value(1)).current;
 
-  /* 🔄 Load saved bleeding for today */
+  /* 📅 Today key */
+  const todayKey = new Date().toISOString().slice(0, 10);
+
+  /* 🔄 Load saved data */
   useEffect(() => {
     loadToday();
   }, []);
 
   async function loadToday() {
     const store = await getBleedingStore();
-    const todayKey = new Date().toISOString().slice(0, 10);
 
     if (store[todayKey]) {
       setLevel(store[todayKey].level);
+      setStopped(store[todayKey].stopped ?? false);
     }
   }
 
-  /* 💾 Save bleeding level */
-  async function save(levelValue: number) {
-    setLevel(levelValue);
-
-    const date = new Date();
+  /* 💾 SAVE BUTTON */
+  async function saveData() {
     await saveBleedingEntry({
-      date,
-      level: levelValue,
-      stopped: false,
+      date: new Date(),
+      level,
+      stopped,
     });
 
-    console.log("🩸 Bleeding saved:", date.toDateString(), levelValue);
+    Alert.alert(
+      "Saved 🩸",
+      `Bleeding marked as ${
+        LEVELS[level].label
+      } for today.`
+    );
   }
 
-  /* 🛑 Bleeding stopped */
+  /* 🛑 BLEEDING STOPPED */
   async function markStopped() {
-    const date = new Date();
+    setStopped(true);
 
     await saveBleedingEntry({
-      date,
+      date: new Date(),
       level,
       stopped: true,
     });
 
-    console.log("🛑 Bleeding stopped:", date.toDateString());
+    Alert.alert("Updated", "Bleeding marked as stopped today.");
   }
 
-  /* 🔴 Pulse animation for STOP button */
+  /* 🔴 Pulse animation */
   useEffect(() => {
     if (!isPeriodDay) return;
 
@@ -101,15 +107,13 @@ export default function BleedingRow({
           !isPeriodDay && styles.disabledCard,
         ]}
       >
-        {/* 🩸 Blood Gradient */}
+        {/* 🩸 Background */}
         <LinearGradient
           colors={[
             "rgba(244,63,94,0.35)",
             "rgba(244,63,94,0.08)",
             "transparent",
           ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
@@ -118,7 +122,7 @@ export default function BleedingRow({
           {isPeriodDay ? `Today • Day ${day}` : "Outside period days"}
         </Text>
 
-        {/* 💧 Bleeding Level */}
+        {/* 💧 LEVEL SELECTOR */}
         <View style={styles.row}>
           {LEVELS.map((item, index) => {
             const active = level === index;
@@ -127,7 +131,7 @@ export default function BleedingRow({
               <Pressable
                 key={item.label}
                 disabled={!isPeriodDay}
-                onPress={() => save(index)}
+                onPress={() => setLevel(index)}
                 style={[
                   styles.option,
                   active && styles.activeOption,
@@ -150,8 +154,16 @@ export default function BleedingRow({
           })}
         </View>
 
-        {/* ✅ HAS BLEEDING STOPPED */}
+        {/* 💾 SAVE */}
         {isPeriodDay && (
+          <Pressable style={styles.saveButton} onPress={saveData}>
+            <Save size={18} color="#fff" />
+            <Text style={styles.saveText}>Save</Text>
+          </Pressable>
+        )}
+
+        {/* 🛑 STOP */}
+        {isPeriodDay && !stopped && (
           <Animated.View style={{ transform: [{ scale: pulse }] }}>
             <Pressable
               style={styles.stopButton}
@@ -159,10 +171,17 @@ export default function BleedingRow({
             >
               <CheckCircle2 size={18} color="#fff" />
               <Text style={styles.stopText}>
-                Has bleeding stopped?
+                Bleeding stopped
               </Text>
             </Pressable>
           </Animated.View>
+        )}
+
+        {/* ✅ STATUS */}
+        {stopped && (
+          <Text style={styles.stoppedText}>
+            ✔ Bleeding has stopped today
+          </Text>
         )}
       </CardWrapper>
     </View>
@@ -226,12 +245,28 @@ const styles = StyleSheet.create({
     color: "#CBD5F5",
   },
 
-  stopButton: {
+  saveButton: {
     marginTop: 18,
     flexDirection: "row",
+    gap: 8,
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: "#22C55E",
+  },
+
+  saveText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
+  stopButton: {
+    marginTop: 14,
+    flexDirection: "row",
     gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 18,
     backgroundColor: "#F43F5E",
@@ -240,6 +275,12 @@ const styles = StyleSheet.create({
   stopText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 14,
+  },
+
+  stoppedText: {
+    marginTop: 14,
+    textAlign: "center",
+    color: "#86EFAC",
+    fontSize: 13,
   },
 });

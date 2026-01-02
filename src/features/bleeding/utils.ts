@@ -67,3 +67,55 @@ export function getMonthlyBarValue(
 
   return total;
 }
+
+/**
+ * Text for today's bleeding based on saved level
+ */
+export function getBleedingLevelText(level: number) {
+  switch (level) {
+    case 0:
+      return "No bleeding today";
+    case 1:
+      return "Light bleeding today";
+    case 2:
+      return "Moderate bleeding today";
+    case 3:
+      return "Heavy bleeding today";
+    default:
+      return "No bleeding data for today";
+  }
+}
+
+/**
+ * Overall bleeding insight for a month
+ */
+export function getMonthlyBleedingSummary(
+  monthData: Record<string, BleedingEntry> | undefined
+) {
+  if (!monthData || typeof monthData !== "object") {
+    return "No bleeding data this month";
+  }
+
+  const values = Object.values(monthData);
+  if (!values.length) return "No bleeding data this month";
+
+  const avg =
+    values.reduce((sum, e) => sum + (e.level ?? 0), 0) /
+    values.length;
+
+  if (avg < 1) return "Overall bleeding was light this month";
+  if (avg < 2) return "Overall bleeding was moderate this month";
+  return "Overall bleeding was heavy this month";
+}
+
+/**
+ * Get today's bleeding entry safely
+ */
+export function getTodayBleedingEntry(
+  entries: Record<string, BleedingEntry> | undefined
+) {
+  if (!entries || typeof entries !== "object") return null;
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  return entries[todayKey] ?? null;
+}

@@ -1,31 +1,60 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const KEY = "BLEEDING_DATA";
+/* 🔑 Storage key */
+const BLEEDING_KEY = "bleeding-store";
 
+/* 🩸 Single day bleeding entry */
 export type BleedingEntry = {
-  level: number; // 0-3
-  stopped: boolean;
+  level: number;      // 0 = none, 1 = light, 2 = medium, 3 = heavy
+  stopped: boolean;   // has bleeding stopped?
 };
 
+/* 🗂 Store shape: YYYY-MM-DD -> BleedingEntry */
 export type BleedingStore = Record<string, BleedingEntry>;
 
+/* 📥 Load bleeding store */
 export async function getBleedingStore(): Promise<BleedingStore> {
-  const raw = await AsyncStorage.getItem(KEY);
-  return raw ? JSON.parse(raw) : {};
+  try {
+    const raw = await AsyncStorage.getItem(BLEEDING_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("Failed to load bleeding store", e);
+    return {};
+  }
 }
 
-export async function saveBleedingEntry(params: {
+/* 📤 Save entire store */
+async function saveBleedingStore(store: BleedingStore) {
+  try {
+    await AsyncStorage.setItem(BLEEDING_KEY, JSON.stringify(store));
+  } catch (e) {
+    console.warn("Failed to save bleeding store", e);
+  }
+}
+
+/* 💾 Save / Update bleeding entry (SAFE, UPSERT) */
+export async function saveBleedingEntry({
+  date,
+  level,
+  stopped,
+}: {
   date: Date;
   level: number;
   stopped: boolean;
 }) {
+  const key = date.toISOString().slice(0, 10); // YYYY-MM-DD
   const store = await getBleedingStore();
-  const key = params.date.toISOString().slice(0, 10);
 
   store[key] = {
-    level: params.level,
-    stopped: params.stopped,
+    level,
+    stopped,
   };
 
-  await AsyncStorage.setItem(KEY, JSON.stringify(store));
+  await saveBleedingStore(store);
+}
+
+/* 🗑 Optional helper (future use) */
+export async function clearBleedingStore() {
+  await AsyncStorage.removeItem(BLEEDING_KEY);
 }
