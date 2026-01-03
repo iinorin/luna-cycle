@@ -1,159 +1,145 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Image } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
+import { BlurView } from "expo-blur";
 import { CyclePhase } from "@/src/cycle/types";
 
 type Props = {
   phase: CyclePhase;
+  day: number;
 };
 
-/* 🧠 Phase messages (emotional, not tips) */
-const PHASE_MESSAGES: Record<CyclePhase, string[]> = {
+const NIGHT_START = 22;
+const NIGHT_END = 6;
+
+/* 🧍‍♀️ MULTI-IMAGE SUPPORT */
+const PHASE_IMAGES: Record<CyclePhase | "night", any[]> = {
   menstrual: [
-    "Hey… how are you feeling today? 🩸💗",
-    "It’s okay to slow down today 🤍",
-    "I’m right here with you 🌸",
+    require("@/assets/companion/menstrual_1.png"),
+    require("@/assets/companion/menstrual_2.png"),
   ],
   follicular: [
-    "You seem lighter today 🌱",
-    "Feeling a bit more motivated?",
-    "This energy looks good on you ✨",
+    require("@/assets/companion/follicular_1.png"),
+    require("@/assets/companion/follicular_2.png"),
+  ],
+  ovulation: [
+    require("@/assets/companion/ovulation_1.png"),
+    require("@/assets/companion/ovulation_2.png"),
+  ],
+  safe: [
+    require("@/assets/companion/safe_1.png"),
+    require("@/assets/companion/safe_2.png"),
+  ],
+  luteal: [
+    require("@/assets/companion/luteal_1.png"),
+    require("@/assets/companion/luteal_2.png"),
+  ],
+  night: [
+    require("@/assets/companion/sleep.png"),
+  ],
+};
+
+/* 💬 COMPANION MESSAGES */
+const MESSAGES: Record<CyclePhase | "night", string[]> = {
+  menstrual: [
+    "It’s okay to slow down today 🤍",
+    "You don’t need to be strong today",
+    "Rest is part of healing 🌙",
+  ],
+  follicular: [
+    "You’re slowly feeling lighter 🌱",
+    "New energy is building up",
+    "Curious thoughts today?",
   ],
   ovulation: [
     "You’re glowing today ✨",
-    "You feel confident — I can tell 💕",
-    "Smile… today suits you 🌸",
+    "Confidence looks good on you",
+    "Feeling social or bold?",
   ],
   safe: [
-    "Everything feels balanced today 🌿",
-    "You’re doing just fine 🤍",
-    "Let’s enjoy this calm energy 🫶",
+    "Things feel calm today 🌿",
+    "A peaceful day suits you",
+    "How are you feeling right now?",
   ],
   luteal: [
-    "Hey… be gentle with yourself 🌙",
-    "Your feelings matter 🤍",
-    "It’s okay to rest your mind 💭",
+    "Be gentle with yourself 💜",
+    "Emotions might feel heavier",
+    "You’re allowed to rest",
+  ],
+  night: [
+    "Good night 🌙 sweet dreams",
+    "You did enough today 🤍",
+    "Rest well, I’m here",
   ],
 };
 
-/* 👧 Phase-based girl images (2 each) */
-const PHASE_IMAGES: Record<CyclePhase, any[]> = {
-  menstrual: [
-    require("../../assets/companion/menstrual_1.png"),
-    require("../../assets/companion/menstrual_2.png"),
-  ],
-  follicular: [
-    require("../../assets/companion/follicular_1.png"),
-    require("../../assets/companion/follicular_2.png"),
-  ],
-  ovulation: [
-    require("../../assets/companion/ovulation_1.png"),
-    require("../../assets/companion/ovulation_2.png"),
-  ],
-  luteal: [
-    require("../../assets/companion/luteal_1.png"),
-    require("../../assets/companion/luteal_2.png"),
-  ],
-  safe: [
-    require("../../assets/companion/safe_1.png"),
-    require("../../assets/companion/safe_2.png"),
-  ],
-};
-
-const SLEEP_IMAGE = require("@/assets/companion/sleep.png");
-
-export function CompanionMessage({ phase }: Props) {
-  const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(10)).current;
-
+export function CompanionMessage({ phase, day }: Props) {
   const hour = new Date().getHours();
-  const isNight = hour >= 22 || hour < 6;
+  const isNight = hour >= NIGHT_START || hour < NIGHT_END;
+  const activePhase: CyclePhase | "night" = isNight ? "night" : phase;
 
-  const { message, image } = useMemo(() => {
-    if (isNight) {
-      return {
-        message: "Good night… sweet dreams 🌙💤",
-        image: SLEEP_IMAGE,
-      };
-    }
+  /* 🖼️ Rotate image + message by day (stable, no flicker) */
+  const image = useMemo(() => {
+    const list = PHASE_IMAGES[activePhase];
+    return list[day % list.length];
+  }, [activePhase, day]);
 
-    const messages = PHASE_MESSAGES[phase];
-    const images = PHASE_IMAGES[phase];
-
-    return {
-      message: messages[Math.floor(Math.random() * messages.length)],
-      image: images[Math.floor(Math.random() * images.length)],
-    };
-  }, [phase, isNight]);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: 450,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slide, {
-        toValue: 0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  const message = useMemo(() => {
+    const list = MESSAGES[activePhase];
+    return list[day % list.length];
+  }, [activePhase, day]);
 
   return (
-    <Animated.View
-      style={[
-        styles.wrapper,
-        {
-          opacity: fade,
-          transform: [{ translateY: slide }],
-        },
-      ]}
-    >
-      <Image source={image} style={styles.avatar} />
+    <View style={styles.wrapper}>
+      <BlurView intensity={42} tint="dark" style={styles.card}>
+        {/* 🧍‍♀️ Companion */}
+        <Image source={image} style={styles.girl} />
 
-      <LinearGradient
-        colors={["#FCE7F3", "#FBCFE8"]}
-        style={styles.bubble}
-      >
-        <Text style={styles.text}>{message}</Text>
-      </LinearGradient>
-    </Animated.View>
+        {/* 💭 Speech Bubble */}
+        <View style={styles.bubble}>
+          <Text style={styles.text}>{message}</Text>
+        </View>
+      </BlurView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginHorizontal: 20,
-    marginBottom: 14,
+    marginHorizontal: 16,
+    marginVertical: 22,
   },
 
-  avatar: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 22,
+    borderRadius: 30,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    minHeight: 150,
+  },
+
+  girl: {
+    width: 110,
+    height: 110,
     resizeMode: "contain",
+    marginRight: 16,
   },
 
   bubble: {
-    maxWidth: "78%",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 18,
-    borderTopLeftRadius: 4,
-    shadowColor: "#EC4899",
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    borderTopLeftRadius: 10,
   },
 
   text: {
-    fontSize: 14,
-    color: "#831843",
-    lineHeight: 20,
+    color: "#FFFFFF",
+    fontSize: 17,
+    lineHeight: 26,
     fontWeight: "500",
   },
 });
