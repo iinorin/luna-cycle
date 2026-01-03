@@ -24,28 +24,22 @@ const DOT_RADIUS = 112;
 const DOT_SIZE = 16;
 const ACTIVE_DOT_SIZE = 24;
 
-/* 🌿 Mature, phase-based glow colors (typed correctly) */
+/* 🌿 Phase glow gradients */
 const PHASE_GLOW: Record<
   string,
   readonly [ColorValue, ColorValue, ...ColorValue[]]
 > = {
-  period: [
-    "rgba(244,114,182,0.32)",
-    "rgba(15,23,42,0.96)",
-  ],
-  follicular: [
-    "rgba(94,234,212,0.32)",
-    "rgba(15,23,42,0.96)",
-  ],
-  ovulation: [
-    "rgba(251,191,36,0.38)",
-    "rgba(15,23,42,0.96)",
-  ],
-  luteal: [
-    "rgba(167,139,250,0.32)",
-    "rgba(15,23,42,0.96)",
-  ],
+  period: ["rgba(244,114,182,0.32)", "rgba(15,23,42,0.96)"],
+  follicular: ["rgba(94,234,212,0.32)", "rgba(15,23,42,0.96)"],
+  ovulation: ["rgba(251,191,36,0.38)", "rgba(15,23,42,0.96)"],
+  luteal: ["rgba(167,139,250,0.32)", "rgba(15,23,42,0.96)"],
 };
+
+/* 🛡️ ABSOLUTE FALLBACK (never crashes) */
+const FALLBACK_GLOW: readonly [ColorValue, ColorValue] = [
+  "rgba(148,163,184,0.25)",
+  "rgba(15,23,42,0.95)",
+];
 
 export function CycleRing({
   cycleLength,
@@ -55,7 +49,12 @@ export function CycleRing({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [offset, setOffset] = useState(0);
 
-  const currentPhase = getPhaseForDay(currentDay, periodLength);
+  const currentPhase =
+    getPhaseForDay(currentDay, periodLength) ?? "luteal";
+
+  /* ✅ SAFE gradient selection */
+  const ringGlowColors =
+    PHASE_GLOW[currentPhase] ?? FALLBACK_GLOW;
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 30,
@@ -69,12 +68,11 @@ export function CycleRing({
     <View style={styles.wrapper}>
       {/* 🌫️ PHASE GLOW RING */}
       <LinearGradient
-        colors={PHASE_GLOW[currentPhase]}
+        colors={ringGlowColors}
         start={{ x: 0.2, y: 0.15 }}
         end={{ x: 0.85, y: 0.9 }}
         style={styles.ringGlow}
       >
-        {/* subtle inner depth */}
         <View style={styles.innerGlow} />
 
         <View {...panResponder.panHandlers} style={styles.container}>
@@ -102,7 +100,8 @@ export function CycleRing({
               DOT_RADIUS * Math.sin(angle) -
               DOT_SIZE / 2;
 
-            const phase = getPhaseForDay(day, periodLength);
+            const phase =
+              getPhaseForDay(day, periodLength) ?? "luteal";
 
             return (
               <View
@@ -131,7 +130,7 @@ export function CycleRing({
       </LinearGradient>
 
       {/* INFO CARD */}
-      {selectedDay && (
+      {selectedDay !== null && (
         <DayInfoCard
           day={selectedDay}
           periodLength={periodLength}

@@ -71,7 +71,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* 🔒 FIXED HEADER */}
       <View style={styles.header}>
-        <HeaderCard phase={currentPhase} dragY={translateY} />
+        <HeaderCard phase={currentPhase} translateY={translateY} />
 
 
         {/* 🌫️ BLUR OVERLAY (opacity animated) */}
