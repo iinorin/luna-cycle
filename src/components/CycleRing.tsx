@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   PanResponder,
+  ColorValue,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,11 +20,32 @@ type Props = {
 };
 
 const RING_SIZE = 260;
-const DOT_RADIUS = 110;
+const DOT_RADIUS = 112;
+const DOT_SIZE = 16;
+const ACTIVE_DOT_SIZE = 24;
 
-// ✅ DOT SIZE CONTROLS
-const DOT_SIZE = 18;
-const ACTIVE_DOT_SIZE = 26;
+/* 🌿 Mature, phase-based glow colors (typed correctly) */
+const PHASE_GLOW: Record<
+  string,
+  readonly [ColorValue, ColorValue, ...ColorValue[]]
+> = {
+  period: [
+    "rgba(244,114,182,0.32)",
+    "rgba(15,23,42,0.96)",
+  ],
+  follicular: [
+    "rgba(94,234,212,0.32)",
+    "rgba(15,23,42,0.96)",
+  ],
+  ovulation: [
+    "rgba(251,191,36,0.38)",
+    "rgba(15,23,42,0.96)",
+  ],
+  luteal: [
+    "rgba(167,139,250,0.32)",
+    "rgba(15,23,42,0.96)",
+  ],
+};
 
 export function CycleRing({
   cycleLength,
@@ -32,6 +54,8 @@ export function CycleRing({
 }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [offset, setOffset] = useState(0);
+
+  const currentPhase = getPhaseForDay(currentDay, periodLength);
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 30,
@@ -43,18 +67,24 @@ export function CycleRing({
 
   return (
     <View style={styles.wrapper}>
-      {/* GRADIENT GLOW */}
+      {/* 🌫️ PHASE GLOW RING */}
       <LinearGradient
-        colors={["rgba(99,102,241,0.25)", "rgba(15,23,42,0.9)"]}
+        colors={PHASE_GLOW[currentPhase]}
+        start={{ x: 0.2, y: 0.15 }}
+        end={{ x: 0.85, y: 0.9 }}
         style={styles.ringGlow}
       >
-        {/* RING */}
+        {/* subtle inner depth */}
+        <View style={styles.innerGlow} />
+
         <View {...panResponder.panHandlers} style={styles.container}>
           {/* CENTER LABEL */}
           <View style={styles.centerLabel}>
             <Text style={styles.centerSmall}>Today</Text>
             <Text style={styles.centerBig}>
-              {getPhaseForDay(currentDay, periodLength)} Phase
+              {currentPhase.charAt(0).toUpperCase() +
+                currentPhase.slice(1)}{" "}
+              Phase
             </Text>
           </View>
 
@@ -64,9 +94,13 @@ export function CycleRing({
               (2 * Math.PI * i) / cycleLength - Math.PI / 2;
 
             const x =
-              RING_SIZE / 2 + DOT_RADIUS * Math.cos(angle) - 8;
+              RING_SIZE / 2 +
+              DOT_RADIUS * Math.cos(angle) -
+              DOT_SIZE / 2;
             const y =
-              RING_SIZE / 2 + DOT_RADIUS * Math.sin(angle) - 8;
+              RING_SIZE / 2 +
+              DOT_RADIUS * Math.sin(angle) -
+              DOT_SIZE / 2;
 
             const phase = getPhaseForDay(day, periodLength);
 
@@ -84,7 +118,11 @@ export function CycleRing({
                 <CycleDot
                   phase={phase}
                   isActive={day === currentDay}
-                  size={day === currentDay ? ACTIVE_DOT_SIZE : DOT_SIZE}
+                  size={
+                    day === currentDay
+                      ? ACTIVE_DOT_SIZE
+                      : DOT_SIZE
+                  }
                 />
               </View>
             );
@@ -107,45 +145,55 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: "center",
   },
+
   ringGlow: {
-    width: RING_SIZE + 40,
-    height: RING_SIZE + 40,
-    borderRadius: (RING_SIZE + 40) / 2,
+    width: RING_SIZE + 44,
+    height: RING_SIZE + 44,
+    borderRadius: (RING_SIZE + 44) / 2,
     justifyContent: "center",
     alignItems: "center",
   },
+
+  innerGlow: {
+    position: "absolute",
+    width: RING_SIZE + 10,
+    height: RING_SIZE + 10,
+    borderRadius: (RING_SIZE + 10) / 2,
+    backgroundColor: "rgba(255,255,255,0.035)",
+  },
+
   container: {
     width: RING_SIZE,
     height: RING_SIZE,
     justifyContent: "center",
     alignItems: "center",
   },
+
   dotWrapper: {
     position: "absolute",
-    shadowColor: "#6366F1",
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
   },
+
   centerLabel: {
     position: "absolute",
     alignItems: "center",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.06)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.12)",
   },
+
   centerSmall: {
-    color: "#CBD5F5",
+    color: "#CBD5E1",
     fontSize: 12,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
+
   centerBig: {
     color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
     marginTop: 2,
   },
 });

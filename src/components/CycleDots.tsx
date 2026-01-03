@@ -11,19 +11,20 @@ type Props = {
 
 export function CycleDot({ phase, isActive, size = 16 }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(isActive ? 1 : 0.6)).current;
 
   useEffect(() => {
     if (isActive) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
-            toValue: 1.4,
-            duration: 600,
+            toValue: 1.25,
+            duration: 900,
             useNativeDriver: true,
           }),
           Animated.timing(scale, {
             toValue: 1,
-            duration: 600,
+            duration: 900,
             useNativeDriver: true,
           }),
         ])
@@ -38,8 +39,7 @@ export function CycleDot({ phase, isActive, size = 16 }: Props) {
         height: size,
         borderRadius: size / 2,
         backgroundColor: PHASE_COLORS[phase],
-        borderWidth: isActive ? 2 : 0,
-        borderColor: "#fff",
+        opacity,
         transform: [{ scale }],
       }}
     />

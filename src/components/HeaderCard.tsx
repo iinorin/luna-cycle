@@ -3,14 +3,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import { useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+
 import { PHASE_GRADIENTS } from "../cycle/colors";
 import { CyclePhase } from "../cycle/types";
 
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+
 type HeaderCardProps = {
   phase: CyclePhase;
+  dragY: Animated.Value; // 👈 NEW
 };
 
-export function HeaderCard({ phase }: HeaderCardProps) {
+export function HeaderCard({ phase, dragY }: HeaderCardProps) {
   const navigation = useNavigation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
@@ -30,13 +35,30 @@ export function HeaderCard({ phase }: HeaderCardProps) {
     ]).start();
   }, []);
 
+  // 🔮 Blur intensity increases as user drags down
+  const blurIntensity = dragY.interpolate({
+    inputRange: [0, 120],
+    outputRange: [0, 40],
+    extrapolate: "clamp",
+  });
+
   return (
     <Animated.View
-      style={{
-        opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
-      }}
+      style={[
+        styles.wrapper,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
     >
+      {/* 🌫️ BLUR LAYER */}
+      <AnimatedBlurView
+        intensity={blurIntensity}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+      />
+
       <LinearGradient
         colors={PHASE_GRADIENTS[phase]}
         start={{ x: 0, y: 0 }}
@@ -58,7 +80,6 @@ export function HeaderCard({ phase }: HeaderCardProps) {
           <View style={styles.indicator} />
         </View>
 
-        {/* Spacer */}
         <View style={{ width: 40 }} />
       </LinearGradient>
     </Animated.View>
@@ -66,6 +87,10 @@ export function HeaderCard({ phase }: HeaderCardProps) {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    zIndex: 10,
+  },
+
   header: {
     paddingTop: 48,
     paddingBottom: 28,
@@ -74,6 +99,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 28,
     flexDirection: "row",
     alignItems: "center",
+    overflow: "hidden",
   },
 
   menuBtn: {

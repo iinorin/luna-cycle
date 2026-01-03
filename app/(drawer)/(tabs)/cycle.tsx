@@ -1,16 +1,16 @@
+import { BlurView } from "expo-blur";
+import { useRef } from "react";
 import {
-  View,
-  StyleSheet,
-  Dimensions,
   Animated,
+  Dimensions,
   PanResponder,
   ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
-import { useRef } from "react";
-import { BlurView } from "expo-blur";
 
-import { HeaderCard } from "@/src/components/HeaderCard";
 import { CycleRing } from "@/src/components/CycleRing";
+import { HeaderCard } from "@/src/components/HeaderCard";
 
 import {
   DEFAULT_CYCLE_STATE,
@@ -71,7 +71,8 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* 🔒 FIXED HEADER */}
       <View style={styles.header}>
-        <HeaderCard phase={currentPhase} />
+        <HeaderCard phase={currentPhase} dragY={translateY} />
+
 
         {/* 🌫️ BLUR OVERLAY (opacity animated) */}
         <Animated.View
