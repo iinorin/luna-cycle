@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useMemo, useRef, useEffect } from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { CyclePhase } from "@/src/cycle/types";
 
 type Props = {
@@ -75,19 +76,64 @@ const PHASE_TIPS = {
   ],
 } as const;
 
+/** ✅ Type-safe gradient colors */
+const PHASE_GRADIENTS: Record<
+  CyclePhase,
+  readonly [string, string]
+> = {
+  menstrual: ["#FADADD", "#F472B6"],
+  follicular: ["#E6F4EA", "#86EFAC"],
+  ovulation: ["#FFF3C4", "#FACC15"],
+  safe: ["#E0F2FE", "#38BDF8"],
+  luteal: ["#EDE7F6", "#A78BFA"],
+};
+
 export function TipsSuggester({ phase, currentDay }: Props) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [phase]);
+
   const tip = useMemo(() => {
     const tips = PHASE_TIPS[phase];
     return tips[currentDay % tips.length];
   }, [phase, currentDay]);
 
   return (
-    <View style={styles.wrapper}>
-      <BlurView intensity={28} tint="dark" style={styles.container}>
-        <Text style={styles.label}>Daily Tip</Text>
-        <Text style={styles.tip}>{tip}</Text>
-      </BlurView>
-    </View>
+    <Animated.View
+      style={[
+        styles.wrapper,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={PHASE_GRADIENTS[phase]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <BlurView intensity={22} tint="dark" style={styles.container}>
+          <Text style={styles.label}>Daily Tip</Text>
+          <Text style={styles.tip}>{tip}</Text>
+        </BlurView>
+      </LinearGradient>
+    </Animated.View>
   );
 }
 
@@ -97,13 +143,18 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
 
+  gradient: {
+    borderRadius: 22,
+    padding: 1,
+  },
+
   container: {
+    borderRadius: 22,
     paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 18,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
 
   label: {
@@ -117,6 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#FFFFFF",
     lineHeight: 22,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });
