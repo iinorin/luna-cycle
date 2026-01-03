@@ -39,24 +39,24 @@ const PHASE_MESSAGES: Record<CyclePhase, string[]> = {
 /* 👧 Phase-based girl images (2 each) */
 const PHASE_IMAGES: Record<CyclePhase, any[]> = {
   menstrual: [
-    require("@/assets/companion/menstrual_1.png"),
-    require("@/assets/companion/menstrual_2.png"),
+    require("../../assets/companion/menstrual_1.png"),
+    require("../../assets/companion/menstrual_2.png"),
   ],
   follicular: [
-    require("@/assets/companion/follicular_1.png"),
-    require("@/assets/companion/follicular_2.png"),
+    require("../../assets/companion/follicular_1.png"),
+    require("../../assets/companion/follicular_2.png"),
   ],
   ovulation: [
-    require("@/assets/companion/ovulation_1.png"),
-    require("@/assets/companion/ovulation_2.png"),
-  ],
-  safe: [
-    require("@/assets/companion/safe_1.png"),
-    require("@/assets/companion/safe_2.png"),
+    require("../../assets/companion/ovulation_1.png"),
+    require("../../assets/companion/ovulation_2.png"),
   ],
   luteal: [
-    require("@/assets/companion/luteal_1.png"),
-    require("@/assets/companion/luteal_2.png"),
+    require("../../assets/companion/luteal_1.png"),
+    require("../../assets/companion/luteal_2.png"),
+  ],
+  safe: [
+    require("../../assets/companion/safe_1.png"),
+    require("../../assets/companion/safe_2.png"),
   ],
 };
 
