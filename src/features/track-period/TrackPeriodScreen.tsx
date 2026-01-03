@@ -17,58 +17,66 @@ import {
   deleteCycleData,
 } from "./storage";
 
-/** ✅ FIXED IMPORT (file actually exists) */
 import {
   shouldShowCycleGuard,
   markCycleGuardSeen,
   resetCycleGuard,
 } from "./cycleGuard";
 
-/** 🧩 UI MODAL */
 import CycleDataGuardModal from "./components/CycleDataGuardModal";
+
+const INITIAL_DATA = {
+  cycleLength: 28,
+  lastPeriod: new Date(),
+  periodDuration: 5,
+  regularity: "regular" as Regularity,
+  symptoms: [] as string[],
+};
 
 export default function TrackPeriodScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [showGuard, setShowGuard] = useState(false);
-
-  const [data, setData] = useState({
-    cycleLength: 28,
-    lastPeriod: new Date(),
-    periodDuration: 5,
-    regularity: "regular" as Regularity,
-    symptoms: [] as string[],
-  });
+  const [data, setData] = useState(INITIAL_DATA);
 
   /**
-   * 🔐 CYCLE GUARD
+   * 🔐 GUARD – runs correctly on focus
    */
   useFocusEffect(
     useCallback(() => {
+      let mounted = true;
+
       const runGuard = async () => {
-        await resetCycleGuard();
+        // ✅ reset UI state on focus
+        setStep(1);
+        setShowGuard(false);
 
         const existing = await getCycleData();
-        if (!existing) return;
+        if (!existing || !mounted) return;
 
         const shouldShow = await shouldShowCycleGuard();
-        if (!shouldShow) return;
-
-        setShowGuard(true);
+        if (shouldShow && mounted) {
+          setShowGuard(true);
+        }
       };
 
       runGuard();
+
+      return () => {
+        mounted = false;
+      };
     }, [])
   );
 
   /**
-   * SUCCESS STEP
+   * SUCCESS SCREEN
    */
   if (step === 7) {
     return (
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
+            // ✅ FORCE full refresh
             router.replace("/cycle");
           }}
         />
@@ -83,7 +91,7 @@ export default function TrackPeriodScreen() {
           <StepCycleLength
             value={data.cycleLength}
             onNext={(value) => {
-              setData((prev) => ({ ...prev, cycleLength: value }));
+              setData((p) => ({ ...p, cycleLength: value }));
               setStep(2);
             }}
           />
@@ -94,7 +102,7 @@ export default function TrackPeriodScreen() {
             value={data.lastPeriod}
             onBack={() => setStep(1)}
             onNext={(value) => {
-              setData((prev) => ({ ...prev, lastPeriod: value }));
+              setData((p) => ({ ...p, lastPeriod: value }));
               setStep(3);
             }}
           />
@@ -106,10 +114,7 @@ export default function TrackPeriodScreen() {
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
             onChange={(value) =>
-              setData((prev) => ({
-                ...prev,
-                periodDuration: value,
-              }))
+              setData((p) => ({ ...p, periodDuration: value }))
             }
           />
         )}
@@ -119,7 +124,7 @@ export default function TrackPeriodScreen() {
             value={data.regularity}
             onBack={() => setStep(3)}
             onNext={(value) => {
-              setData((prev) => ({ ...prev, regularity: value }));
+              setData((p) => ({ ...p, regularity: value }));
               setStep(5);
             }}
           />
@@ -131,7 +136,7 @@ export default function TrackPeriodScreen() {
             onBack={() => setStep(4)}
             onNext={() => setStep(6)}
             onChange={(value) =>
-              setData((prev) => ({ ...prev, symptoms: value }))
+              setData((p) => ({ ...p, symptoms: value }))
             }
           />
         )}
@@ -139,7 +144,7 @@ export default function TrackPeriodScreen() {
         {step === 6 && (
           <StepDone
             data={data}
-            onEdit={(stepNumber) => setStep(stepNumber)}
+            onEdit={(n) => setStep(n)}
             onSave={async () => {
               await saveCycleData({
                 cycleLength: data.cycleLength,
@@ -149,30 +154,32 @@ export default function TrackPeriodScreen() {
                 symptoms: data.symptoms,
               });
 
-              await resetCycleGuard();
+              await resetCycleGuard(); // ✅ correct place
               setStep(7);
             }}
           />
         )}
       </View>
 
-      {/* 🧊 MODAL UI */}
+      {/* 🧊 GUARD MODAL */}
       <CycleDataGuardModal
         visible={showGuard}
         onKeep={async () => {
           await markCycleGuardSeen();
           setShowGuard(false);
-          router.replace("/insights");
+          router.replace("/insights"); // ✅ refresh
         }}
         onUpdate={async () => {
           await markCycleGuardSeen();
           setShowGuard(false);
+          setData(INITIAL_DATA);
           setStep(1);
         }}
         onDelete={async () => {
           await deleteCycleData();
           await resetCycleGuard();
           setShowGuard(false);
+          setData(INITIAL_DATA);
           setStep(1);
         }}
       />
