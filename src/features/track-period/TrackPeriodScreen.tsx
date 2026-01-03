@@ -190,7 +190,7 @@ export default function TrackPeriodScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#2d10e9ff",
+    backgroundColor: "#11151aff",
   },
   content: {
     paddingTop: 150,
