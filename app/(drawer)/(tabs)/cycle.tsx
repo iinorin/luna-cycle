@@ -24,9 +24,9 @@ import {
 const HEADER_HEIGHT = 140;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
-// how far the sheet collapses
-const COLLAPSED_Y = HEADER_HEIGHT * 0.65;
-const EXPANDED_Y = HEADER_HEIGHT + 12;
+// How far the sheet moves
+const COLLAPSED_Y = HEADER_HEIGHT * 0.65; // High position
+const EXPANDED_Y = HEADER_HEIGHT + 12;     // Low position
 
 export default function HomeScreen() {
   const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
@@ -35,6 +35,12 @@ export default function HomeScreen() {
   const currentDay = getCurrentCycleDay(DEFAULT_CYCLE_STATE);
   const currentPhase = getPhaseForDay(currentDay, periodLength);
 
+  /**
+   * FIX 1: TRACKING POSITION
+   * lastTranslateY stores where the sheet stopped last time.
+   * This prevents the sheet from "jumping" back to the start when you touch it again.
+   */
+  const lastTranslateY = useRef(EXPANDED_Y);
   const translateY = useRef(new Animated.Value(EXPANDED_Y)).current;
 
   /* 🌫 header blur while dragging */
@@ -44,23 +50,37 @@ export default function HomeScreen() {
     extrapolate: "clamp",
   });
 
-  /* 🖐️ drag entire page */
+  /* 🖐️ DRAG LOGIC */
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 6,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 10,
 
       onPanResponderMove: (_, g) => {
-        const next = EXPANDED_Y + g.dy;
-        if (next >= COLLAPSED_Y) {
-          translateY.setValue(next);
+        // Calculate new position based on where we started the drag (lastTranslateY)
+        let nextPos = lastTranslateY.current + g.dy;
+
+        // Constraint: Don't let the sheet go higher than the collapsed point
+        if (nextPos < COLLAPSED_Y) {
+          nextPos = COLLAPSED_Y;
         }
+
+        translateY.setValue(nextPos);
       },
 
       onPanResponderRelease: (_, g) => {
+        // Determine if we should snap Up or Down based on drag distance (80px)
+        const shouldSnapUp = g.dy < -80;
+        const toValue = shouldSnapUp ? COLLAPSED_Y : EXPANDED_Y;
+
         Animated.spring(translateY, {
-          toValue: g.dy < -80 ? COLLAPSED_Y : EXPANDED_Y,
+          toValue,
           useNativeDriver: true,
-        }).start();
+          tension: 40,
+          friction: 8,
+        }).start(() => {
+          // FIX: Save the new position so the next drag starts from here
+          lastTranslateY.current = toValue;
+        });
       },
     })
   ).current;
@@ -71,7 +91,6 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <HeaderCard phase={currentPhase} translateY={translateY} />
 
-        {/* header blur */}
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { opacity: blurOpacity }]}
@@ -86,7 +105,6 @@ export default function HomeScreen() {
 
       {/* 🔽 DRAGGABLE SHEET */}
       <Animated.View
-        {...panResponder.panHandlers}
         style={[
           styles.sheet,
           {
@@ -94,14 +112,16 @@ export default function HomeScreen() {
           },
         ]}
       >
-        {/* small handle */}
-        <View style={styles.handle} />
+        {/* DRAG HANDLE AREA */}
+        <View {...panResponder.panHandlers} style={styles.handleContainer}>
+          <View style={styles.handle} />
+        </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* 🌸 TIPS — FIXED VISIBILITY */}
+          {/* 🌸 TIPS */}
           <TipsSuggester
             phase={currentPhase}
             currentDay={currentDay}
@@ -153,6 +173,7 @@ const styles = StyleSheet.create({
   sheet: {
     position: "absolute",
     top: 0,
+    // Sheet must be full screen height to cover the background when dragged up
     height: SCREEN_HEIGHT,
     width: "100%",
     backgroundColor: "#0F172A",
@@ -160,6 +181,19 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     zIndex: 10,
     overflow: "hidden",
+    // Shadow to distinguish sheet from header
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+
+  handleContainer: {
+    width: "100%",
+    paddingTop: 12,
+    paddingBottom: 8,
+    alignItems: "center",
   },
 
   handle: {
@@ -167,15 +201,15 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: "#475569",
     borderRadius: 10,
-    alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 12,
   },
 
-  /* IMPORTANT FIX — paddingTop makes Tips visible */
-  content: {
-    paddingTop: 20,
-    paddingBottom: 80, // 👈 prevents bleeding buttons cut
+  /* 🚀 THE CRITICAL FIX FOR CUTOFF CONTENT */
+  scrollContent: {
+    paddingTop: 8,
+    paddingHorizontal: 16,
+    // paddingBottom must be equal to or greater than your EXPANDED_Y (152px)
+    // plus some extra for the BleedingRow components.
+    paddingBottom: EXPANDED_Y + 150,
   },
 
   center: {
