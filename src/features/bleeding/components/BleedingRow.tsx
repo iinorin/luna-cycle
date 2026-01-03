@@ -46,7 +46,7 @@ export default function BleedingRow({
     }
   }
 
-  /* 💾 SAVE BUTTON */
+  /* 💾 SAVE */
   async function saveData() {
     await saveBleedingEntry({
       date: new Date(),
@@ -56,13 +56,11 @@ export default function BleedingRow({
 
     Alert.alert(
       "Saved 🩸",
-      `Bleeding marked as ${
-        LEVELS[level].label
-      } for today.`
+      `Bleeding marked as ${LEVELS[level].label} for today.`
     );
   }
 
-  /* 🛑 BLEEDING STOPPED */
+  /* 🛑 STOP */
   async function markStopped() {
     setStopped(true);
 
@@ -95,109 +93,123 @@ export default function BleedingRow({
     ).start();
   }, [isPeriodDay]);
 
-  const CardWrapper = isPeriodDay ? View : BlurView;
-
   return (
     <View style={styles.wrapper}>
-      <CardWrapper
-        intensity={25}
-        tint="dark"
-        style={[
-          styles.card,
-          !isPeriodDay && styles.disabledCard,
-        ]}
-      >
-        {/* 🩸 Background */}
-        <LinearGradient
-          colors={[
-            "rgba(244,63,94,0.35)",
-            "rgba(244,63,94,0.08)",
-            "transparent",
+      {/* 🧊 OUTER WRAPPER (IMPORTANT FIX) */}
+      <View style={styles.cardWrapper}>
+        {/* 🌫️ BLUR BACKGROUND (only when disabled) */}
+        {!isPeriodDay && (
+          <BlurView
+            intensity={25}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+
+        {/* 🩸 CARD CONTENT */}
+        <View
+          style={[
+            styles.card,
+            !isPeriodDay && styles.disabledCard,
           ]}
-          style={StyleSheet.absoluteFill}
-        />
+        >
+          {/* 🔴 Gradient */}
+          <LinearGradient
+            colors={[
+              "rgba(244,63,94,0.35)",
+              "rgba(244,63,94,0.08)",
+              "transparent",
+            ]}
+            style={StyleSheet.absoluteFill}
+          />
 
-        <Text style={styles.title}>Bleeding</Text>
-        <Text style={styles.subtitle}>
-          {isPeriodDay ? `Today • Day ${day}` : "Outside period days"}
-        </Text>
-
-        {/* 💧 LEVEL SELECTOR */}
-        <View style={styles.row}>
-          {LEVELS.map((item, index) => {
-            const active = level === index;
-
-            return (
-              <Pressable
-                key={item.label}
-                disabled={!isPeriodDay}
-                onPress={() => setLevel(index)}
-                style={[
-                  styles.option,
-                  active && styles.activeOption,
-                ]}
-              >
-                <View style={styles.iconRow}>
-                  {Array.from({ length: item.drops }).map((_, i) => (
-                    <Droplet
-                      key={i}
-                      size={18}
-                      color={active ? "#F43F5E" : "#9CA3AF"}
-                      fill={active ? "#F43F5E" : "transparent"}
-                    />
-                  ))}
-                </View>
-
-                <Text style={styles.label}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* 💾 SAVE */}
-        {isPeriodDay && (
-          <Pressable style={styles.saveButton} onPress={saveData}>
-            <Save size={18} color="#fff" />
-            <Text style={styles.saveText}>Save</Text>
-          </Pressable>
-        )}
-
-        {/* 🛑 STOP */}
-        {isPeriodDay && !stopped && (
-          <Animated.View style={{ transform: [{ scale: pulse }] }}>
-            <Pressable
-              style={styles.stopButton}
-              onPress={markStopped}
-            >
-              <CheckCircle2 size={18} color="#fff" />
-              <Text style={styles.stopText}>
-                Bleeding stopped
-              </Text>
-            </Pressable>
-          </Animated.View>
-        )}
-
-        {/* ✅ STATUS */}
-        {stopped && (
-          <Text style={styles.stoppedText}>
-            ✔ Bleeding has stopped today
+          <Text style={styles.title}>Bleeding</Text>
+          <Text style={styles.subtitle}>
+            {isPeriodDay ? `Today • Day ${day}` : "Outside period days"}
           </Text>
-        )}
-      </CardWrapper>
+
+          {/* 💧 LEVEL SELECTOR */}
+          <View style={styles.row}>
+            {LEVELS.map((item, index) => {
+              const active = level === index;
+
+              return (
+                <Pressable
+                  key={item.label}
+                  disabled={!isPeriodDay}
+                  onPress={() => setLevel(index)}
+                  style={[
+                    styles.option,
+                    active && styles.activeOption,
+                  ]}
+                >
+                  <View style={styles.iconRow}>
+                    {Array.from({ length: item.drops }).map((_, i) => (
+                      <Droplet
+                        key={i}
+                        size={18}
+                        color={active ? "#F43F5E" : "#9CA3AF"}
+                        fill={active ? "#F43F5E" : "transparent"}
+                      />
+                    ))}
+                  </View>
+
+                  <Text style={styles.label}>{item.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* 💾 SAVE */}
+          {isPeriodDay && (
+            <Pressable style={styles.saveButton} onPress={saveData}>
+              <Save size={18} color="#fff" />
+              <Text style={styles.saveText}>Save</Text>
+            </Pressable>
+          )}
+
+          {/* 🛑 STOP */}
+          {isPeriodDay && !stopped && (
+            <Animated.View style={{ transform: [{ scale: pulse }] }}>
+              <Pressable
+                style={styles.stopButton}
+                onPress={markStopped}
+              >
+                <CheckCircle2 size={18} color="#fff" />
+                <Text style={styles.stopText}>
+                  Bleeding stopped
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* ✅ STATUS */}
+          {stopped && (
+            <Text style={styles.stoppedText}>
+              ✔ Bleeding has stopped today
+            </Text>
+          )}
+        </View>
+      </View>
     </View>
   );
 }
 
+/* 🎨 STYLES */
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 16,
     marginTop: 24,
   },
 
+  cardWrapper: {
+    borderRadius: 22,
+    overflow: "hidden",
+  },
+
   card: {
     borderRadius: 22,
     padding: 20,
-    overflow: "hidden",
     backgroundColor: "#111827",
   },
 

@@ -23,8 +23,10 @@ import {
 
 const HEADER_HEIGHT = 140;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const COLLAPSED_Y = HEADER_HEIGHT * 0.6;
-const EXPANDED_Y = HEADER_HEIGHT;
+
+// how far the sheet collapses
+const COLLAPSED_Y = HEADER_HEIGHT * 0.65;
+const EXPANDED_Y = HEADER_HEIGHT + 12;
 
 export default function HomeScreen() {
   const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
@@ -35,21 +37,23 @@ export default function HomeScreen() {
 
   const translateY = useRef(new Animated.Value(EXPANDED_Y)).current;
 
-  /* header blur */
+  /* 🌫 header blur while dragging */
   const blurOpacity = translateY.interpolate({
     inputRange: [COLLAPSED_Y, EXPANDED_Y],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
 
-  /* 🖐️ page drag */
+  /* 🖐️ drag entire page */
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 6,
 
       onPanResponderMove: (_, g) => {
         const next = EXPANDED_Y + g.dy;
-        if (next >= COLLAPSED_Y) translateY.setValue(next);
+        if (next >= COLLAPSED_Y) {
+          translateY.setValue(next);
+        }
       },
 
       onPanResponderRelease: (_, g) => {
@@ -67,32 +71,43 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <HeaderCard phase={currentPhase} translateY={translateY} />
 
+        {/* header blur */}
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { opacity: blurOpacity }]}
         >
-          <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
+          <BlurView
+            intensity={70}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
         </Animated.View>
       </View>
 
-      {/* 🔽 DRAGGABLE PAGE (EVERYTHING BELOW HEADER) */}
+      {/* 🔽 DRAGGABLE SHEET */}
       <Animated.View
         {...panResponder.panHandlers}
         style={[
-          styles.page,
+          styles.sheet,
           {
             transform: [{ translateY }],
           },
         ]}
       >
+        {/* small handle */}
         <View style={styles.handle} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
-          <TipsSuggester phase={currentPhase} currentDay={currentDay} />
+          {/* 🌸 TIPS — FIXED VISIBILITY */}
+          <TipsSuggester
+            phase={currentPhase}
+            currentDay={currentDay}
+          />
 
+          {/* 🟣 CYCLE RING */}
           <View style={styles.center}>
             <CycleRing
               cycleLength={cycleLength}
@@ -101,9 +116,13 @@ export default function HomeScreen() {
             />
           </View>
 
-          <CompanionMessage phase={currentPhase} day={currentDay} />
+          {/* 🧍‍♀️ COMPANION */}
+          <CompanionMessage
+            phase={currentPhase}
+            day={currentDay}
+          />
 
-          {/* 🩸 BLEEDING ROW MOVES WITH PAGE */}
+          {/* 🩸 BLEEDING */}
           <BleedingRow
             day={currentDay}
             isPeriodDay={currentDay <= periodLength}
@@ -120,6 +139,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A",
   },
 
+  /* HEADER */
   header: {
     position: "absolute",
     top: 0,
@@ -129,7 +149,8 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
 
-  page: {
+  /* DRAGGABLE PAGE */
+  sheet: {
     position: "absolute",
     top: 0,
     height: SCREEN_HEIGHT,
@@ -138,22 +159,27 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     zIndex: 10,
+    overflow: "hidden",
   },
 
   handle: {
-    width: 42,
+    width: 44,
     height: 5,
     backgroundColor: "#475569",
     borderRadius: 10,
     alignSelf: "center",
-    marginVertical: 10,
+    marginTop: 10,
+    marginBottom: 12,
   },
 
+  /* IMPORTANT FIX — paddingTop makes Tips visible */
   content: {
-    paddingBottom: 40,
+    paddingTop: 20,
+    paddingBottom: 80, // 👈 prevents bleeding buttons cut
   },
 
   center: {
     alignItems: "center",
+    marginVertical: 16,
   },
 });
