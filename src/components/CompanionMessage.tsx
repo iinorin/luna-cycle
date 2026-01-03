@@ -7,33 +7,60 @@ type Props = {
   phase: CyclePhase;
 };
 
+/* 🧠 Phase messages (emotional, not tips) */
 const PHASE_MESSAGES: Record<CyclePhase, string[]> = {
   menstrual: [
     "Hey… how are you feeling today? 🩸💗",
-    "It’s okay to slow down today 🌧️",
-    "I’m right here with you 🤍",
+    "It’s okay to slow down today 🤍",
+    "I’m right here with you 🌸",
   ],
   follicular: [
     "You seem lighter today 🌱",
-    "Feeling a little more like yourself?",
-    "Want to plan something fun? ✨",
+    "Feeling a bit more motivated?",
+    "This energy looks good on you ✨",
   ],
   ovulation: [
     "You’re glowing today ✨",
-    "Feeling confident? I can feel it 💕",
-    "Smile — today suits you 🌸",
+    "You feel confident — I can tell 💕",
+    "Smile… today suits you 🌸",
   ],
   safe: [
     "Everything feels balanced today 🌿",
     "You’re doing just fine 🤍",
-    "Let’s keep this calm energy 🫶",
+    "Let’s enjoy this calm energy 🫶",
   ],
   luteal: [
-    "Hey… don’t be too hard on yourself 🌙",
-    "Your feelings are valid 🤍",
-    "I know things feel heavy sometimes 💭",
+    "Hey… be gentle with yourself 🌙",
+    "Your feelings matter 🤍",
+    "It’s okay to rest your mind 💭",
   ],
 };
+
+/* 👧 Phase-based girl images (2 each) */
+const PHASE_IMAGES: Record<CyclePhase, any[]> = {
+  menstrual: [
+    require("@/assets/companion/menstrual_1.png"),
+    require("@/assets/companion/menstrual_2.png"),
+  ],
+  follicular: [
+    require("@/assets/companion/follicular_1.png"),
+    require("@/assets/companion/follicular_2.png"),
+  ],
+  ovulation: [
+    require("@/assets/companion/ovulation_1.png"),
+    require("@/assets/companion/ovulation_2.png"),
+  ],
+  safe: [
+    require("@/assets/companion/safe_1.png"),
+    require("@/assets/companion/safe_2.png"),
+  ],
+  luteal: [
+    require("@/assets/companion/luteal_1.png"),
+    require("@/assets/companion/luteal_2.png"),
+  ],
+};
+
+const SLEEP_IMAGE = require("@/assets/companion/sleep.png");
 
 export function CompanionMessage({ phase }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
@@ -42,17 +69,28 @@ export function CompanionMessage({ phase }: Props) {
   const hour = new Date().getHours();
   const isNight = hour >= 22 || hour < 6;
 
-  const message = useMemo(() => {
-    if (isNight) return "Good night… sweet dreams 🌙💤";
-    const list = PHASE_MESSAGES[phase];
-    return list[Math.floor(Math.random() * list.length)];
+  const { message, image } = useMemo(() => {
+    if (isNight) {
+      return {
+        message: "Good night… sweet dreams 🌙💤",
+        image: SLEEP_IMAGE,
+      };
+    }
+
+    const messages = PHASE_MESSAGES[phase];
+    const images = PHASE_IMAGES[phase];
+
+    return {
+      message: messages[Math.floor(Math.random() * messages.length)],
+      image: images[Math.floor(Math.random() * images.length)],
+    };
   }, [phase, isNight]);
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
-        duration: 500,
+        duration: 450,
         useNativeDriver: true,
       }),
       Animated.spring(slide, {
@@ -73,13 +111,8 @@ export function CompanionMessage({ phase }: Props) {
         },
       ]}
     >
-      {/* Girl image (replace with your assets later) */}
-      <Image
-        source={require("@/assets/companion/girl_idle.png")}
-        style={styles.avatar}
-      />
+      <Image source={image} style={styles.avatar} />
 
-      {/* Speech bubble */}
       <LinearGradient
         colors={["#FCE7F3", "#FBCFE8"]}
         style={styles.bubble}
@@ -99,8 +132,8 @@ const styles = StyleSheet.create({
   },
 
   avatar: {
-    width: 48,
-    height: 48,
+    width: 50,
+    height: 50,
     marginRight: 10,
     resizeMode: "contain",
   },
@@ -112,9 +145,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderTopLeftRadius: 4,
     shadowColor: "#EC4899",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
   },
 
   text: {

@@ -12,6 +12,7 @@ import {
 import { CycleRing } from "@/src/components/CycleRing";
 import { HeaderCard } from "@/src/components/HeaderCard";
 import { TipsSuggester } from "@/src/components/TipsSuggester";
+import { CompanionMessage } from "@/src/components/CompanionMessage";
 
 import {
   DEFAULT_CYCLE_STATE,
@@ -41,14 +42,14 @@ export default function HomeScreen() {
     extrapolate: "clamp",
   });
 
-  /* 🧩 Content scale (tips + bleeding) */
+  /* 🧩 Content scale */
   const contentScale = translateY.interpolate({
     inputRange: [MIN_SHEET_Y, HEADER_HEIGHT],
     outputRange: [0.96, 1],
     extrapolate: "clamp",
   });
 
-  /* 🌫️ Blur fade (opacity only) */
+  /* 🌫️ Blur fade */
   const blurOpacity = translateY.interpolate({
     inputRange: [MIN_SHEET_Y, HEADER_HEIGHT],
     outputRange: [1, 0],
@@ -86,38 +87,23 @@ export default function HomeScreen() {
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { opacity: blurOpacity }]}
         >
-          <BlurView
-            intensity={70}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
+          <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
         </Animated.View>
       </View>
 
       {/* ⬆️ DRAGGABLE SHEET */}
       <Animated.View
         {...panResponder.panHandlers}
-        style={[
-          styles.sheet,
-          {
-            transform: [{ translateY }],
-          },
-        ]}
+        style={[styles.sheet, { transform: [{ translateY }] }]}
       >
         {/* Handle */}
         <View style={styles.handle} />
 
         {/* 🌸 PHASE TIPS */}
         <Animated.View
-          style={[
-            styles.tipsContainer,
-            { transform: [{ scale: contentScale }] },
-          ]}
+          style={[styles.tipsContainer, { transform: [{ scale: contentScale }] }]}
         >
-          <TipsSuggester
-            phase={currentPhase}
-            currentDay={currentDay}
-          />
+          <TipsSuggester phase={currentPhase} currentDay={currentDay} />
         </Animated.View>
 
         {/* 🔵 CYCLE RING */}
@@ -131,14 +117,19 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
+        {/* 👧 COMPANION MESSAGE */}
+        <Animated.View
+          style={[styles.companionWrapper, { transform: [{ scale: contentScale }] }]}
+        >
+          <CompanionMessage phase={currentPhase} />
+        </Animated.View>
+
         {/* CONTENT */}
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <Animated.View
-            style={{ transform: [{ scale: contentScale }] }}
-          >
+          <Animated.View style={{ transform: [{ scale: contentScale }] }}>
             <BleedingRow
               day={currentDay}
               isPeriodDay={currentDay <= periodLength}
@@ -192,6 +183,11 @@ const styles = StyleSheet.create({
 
   ringContainer: {
     alignItems: "center",
+    marginBottom: 10,
+  },
+
+  companionWrapper: {
+    paddingHorizontal: 16,
     marginBottom: 12,
   },
 
