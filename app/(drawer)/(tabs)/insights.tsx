@@ -102,14 +102,19 @@ export default function InsightsScreen() {
     outputRange: ["0%", "100%"],
   });
 
-  const currentPhase =
-    cycleInfo.cycleDay <= cycle.periodDuration
-      ? "🌸 Menstrual Phase — Rest & recharge"
-      : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
-        ? "🌱 Follicular Phase — Energy rising"
-        : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
-          ? "🔥 Ovulation Phase — Peak confidence"
+  const lutealStartDay = cycle.cycleLength - 6; // last 7 days
+
+const currentPhase =
+  cycleInfo.cycleDay <= cycle.periodDuration
+    ? "🌸 Menstrual Phase — Rest & recharge"
+    : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
+      ? "🌱 Follicular Phase — Energy rising"
+      : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
+        ? "🔥 Ovulation Phase — Peak confidence"
+        : cycleInfo.cycleDay < lutealStartDay
+          ? "🛡️ Safe Phase — Calm & balanced"
           : "🌙 Luteal Phase — Slow & reflect";
+
 
   /* =========================
      🩸 BLEEDING INSIGHTS DATA
