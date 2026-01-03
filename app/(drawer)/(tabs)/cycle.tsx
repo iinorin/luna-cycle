@@ -11,6 +11,7 @@ import {
 
 import { CycleRing } from "@/src/components/CycleRing";
 import { HeaderCard } from "@/src/components/HeaderCard";
+import { TipsSuggester } from "@/src/components/TipsSuggester";
 
 import {
   DEFAULT_CYCLE_STATE,
@@ -40,7 +41,14 @@ export default function HomeScreen() {
     extrapolate: "clamp",
   });
 
-  /* 🌫️ Blur fade (opacity, NOT intensity) */
+  /* 🧩 Content scale (tips + bleeding) */
+  const contentScale = translateY.interpolate({
+    inputRange: [MIN_SHEET_Y, HEADER_HEIGHT],
+    outputRange: [0.96, 1],
+    extrapolate: "clamp",
+  });
+
+  /* 🌫️ Blur fade (opacity only) */
   const blurOpacity = translateY.interpolate({
     inputRange: [MIN_SHEET_Y, HEADER_HEIGHT],
     outputRange: [1, 0],
@@ -73,8 +81,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <HeaderCard phase={currentPhase} translateY={translateY} />
 
-
-        {/* 🌫️ BLUR OVERLAY (opacity animated) */}
+        {/* 🌫️ BLUR OVERLAY */}
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { opacity: blurOpacity }]}
@@ -97,10 +104,23 @@ export default function HomeScreen() {
           },
         ]}
       >
-        {/* handle */}
+        {/* Handle */}
         <View style={styles.handle} />
 
-        {/* 🔵 SCALED RING */}
+        {/* 🌸 PHASE TIPS */}
+        <Animated.View
+          style={[
+            styles.tipsContainer,
+            { transform: [{ scale: contentScale }] },
+          ]}
+        >
+          <TipsSuggester
+            phase={currentPhase}
+            currentDay={currentDay}
+          />
+        </Animated.View>
+
+        {/* 🔵 CYCLE RING */}
         <Animated.View style={{ transform: [{ scale: ringScale }] }}>
           <View style={styles.ringContainer}>
             <CycleRing
@@ -116,10 +136,14 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <BleedingRow
-            day={currentDay}
-            isPeriodDay={currentDay <= periodLength}
-          />
+          <Animated.View
+            style={{ transform: [{ scale: contentScale }] }}
+          >
+            <BleedingRow
+              day={currentDay}
+              isPeriodDay={currentDay <= periodLength}
+            />
+          </Animated.View>
         </ScrollView>
       </Animated.View>
     </View>
@@ -160,6 +184,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: "center",
     marginVertical: 10,
+  },
+
+  tipsContainer: {
+    marginBottom: 6,
   },
 
   ringContainer: {
