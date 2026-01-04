@@ -1,4 +1,3 @@
-import { BlurView } from "expo-blur";
 import { useRef } from "react";
 import {
   Animated,
@@ -9,10 +8,10 @@ import {
   View,
 } from "react-native";
 
-import { HeaderCard } from "@/src/components/HeaderCard";
-import { CycleRing } from "@/src/components/CycleRing";
-import { TipsSuggester } from "@/src/components/TipsSuggester";
 import { CompanionMessage } from "@/src/components/CompanionMessage";
+import { CycleRing } from "@/src/components/CycleRing";
+import { HeaderCard } from "@/src/components/HeaderCard";
+import { TipsSuggester } from "@/src/components/TipsSuggester";
 import BleedingRow from "@/src/features/bleeding/components/BleedingRow";
 
 import {
@@ -28,6 +27,14 @@ const SCREEN_HEIGHT = Dimensions.get("window").height;
 const COLLAPSED_Y = HEADER_HEIGHT * 0.65; // High position
 const EXPANDED_Y = HEADER_HEIGHT + 12;     // Low position
 
+// Sheet base top (place sheet below header to avoid transform stacking issues)
+const SHEET_TOP = HEADER_HEIGHT;
+// Translate values relative to the sheet's base `top`
+// Prevent the sheet from translating up above the header by clamping the
+// collapsed translate to 0 (sheet top == header bottom).
+const TRANSLATED_COLLAPSED = 0;
+const TRANSLATED_EXPANDED = EXPANDED_Y - SHEET_TOP;
+
 export default function HomeScreen() {
   const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
   const periodLength = DEFAULT_CYCLE_STATE.periodLength;
@@ -40,12 +47,12 @@ export default function HomeScreen() {
    * lastTranslateY stores where the sheet stopped last time.
    * This prevents the sheet from "jumping" back to the start when you touch it again.
    */
-  const lastTranslateY = useRef(EXPANDED_Y);
-  const translateY = useRef(new Animated.Value(EXPANDED_Y)).current;
+  const lastTranslateY = useRef(TRANSLATED_EXPANDED);
+  const translateY = useRef(new Animated.Value(TRANSLATED_EXPANDED)).current;
 
   /* 🌫 header blur while dragging */
   const blurOpacity = translateY.interpolate({
-    inputRange: [COLLAPSED_Y, EXPANDED_Y],
+    inputRange: [TRANSLATED_COLLAPSED, TRANSLATED_EXPANDED],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
@@ -60,8 +67,8 @@ export default function HomeScreen() {
         let nextPos = lastTranslateY.current + g.dy;
 
         // Constraint: Don't let the sheet go higher than the collapsed point
-        if (nextPos < COLLAPSED_Y) {
-          nextPos = COLLAPSED_Y;
+        if (nextPos < TRANSLATED_COLLAPSED) {
+          nextPos = TRANSLATED_COLLAPSED;
         }
 
         translateY.setValue(nextPos);
@@ -70,7 +77,7 @@ export default function HomeScreen() {
       onPanResponderRelease: (_, g) => {
         // Determine if we should snap Up or Down based on drag distance (80px)
         const shouldSnapUp = g.dy < -80;
-        const toValue = shouldSnapUp ? COLLAPSED_Y : EXPANDED_Y;
+        const toValue = shouldSnapUp ? TRANSLATED_COLLAPSED : TRANSLATED_EXPANDED;
 
         Animated.spring(translateY, {
           toValue,
@@ -91,16 +98,6 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <HeaderCard phase={currentPhase} translateY={translateY} />
 
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { opacity: blurOpacity }]}
-        >
-          <BlurView
-            intensity={70}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
       </View>
 
       {/* 🔽 DRAGGABLE SHEET */}
@@ -108,6 +105,7 @@ export default function HomeScreen() {
         style={[
           styles.sheet,
           {
+            top: SHEET_TOP,
             transform: [{ translateY }],
           },
         ]}
@@ -166,7 +164,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: HEADER_HEIGHT,
-    zIndex: 100,
+    zIndex: 1000,
+    elevation: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
 
   /* DRAGGABLE PAGE */
