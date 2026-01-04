@@ -110,8 +110,13 @@ export default function HomeScreen() {
           },
         ]}
       >
-        {/* DRAG HANDLE AREA */}
+        {/* DRAG HANDLE AREA
         <View {...panResponder.panHandlers} style={styles.handleContainer}>
+          <View style={styles.handle} />
+        </View> */}
+
+        {/* DRAG HANDLE AREA */}
+        <View style={styles.handleContainer}>
           <View style={styles.handle} />
         </View>
 
