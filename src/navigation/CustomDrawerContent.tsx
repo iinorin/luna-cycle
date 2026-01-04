@@ -4,11 +4,17 @@ import {
 } from "@react-navigation/drawer";
 import { View, Text, StyleSheet, Pressable, Linking } from "react-native";
 import { Github } from "lucide-react-native";
+import Constants from "expo-constants";
 
 export function CustomDrawerContent(props: any) {
+  const version =
+    Constants.expoConfig?.version ??
+    Constants.manifest?.version ??
+    "1.0.0";
+
   return (
     <View style={styles.container}>
-      {/* SCROLLABLE DRAWER ITEMS */}
+      {/* SCROLLABLE ITEMS */}
       <DrawerContentScrollView
         {...props}
         contentContainerStyle={styles.scroll}
@@ -16,24 +22,27 @@ export function CustomDrawerContent(props: any) {
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
 
-      {/* FOOTER */}
+      {/* GITHUB FOOTER */}
       <Pressable
-        style={styles.footer}
+        style={styles.githubFooter}
         onPress={() => Linking.openURL("https://github.com/iinorin")}
       >
-        <Text style={styles.footerText}>
-          Made with <Text style={styles.heart}>💖</Text> by
-        </Text>
-
-        <View style={styles.githubRow}>
-          <Github size={18} color="#fff" />
+        <Github size={18} color="#fff" />
+        <Text style={styles.githubText}>
+          Made with <Text style={styles.heart}>💖</Text> by{" "}
           <Text style={styles.username}>iinorin</Text>
-        </View>
+        </Text>
       </Pressable>
+
+      {/* APP INFO FOOTER */}
+      <View style={styles.appInfoFooter}>
+        <Text style={styles.appName}>Luna Cycle</Text>
+        <Text style={styles.appInfo}>Version {version}</Text>
+        <Text style={styles.appInfo}>Built with Expo · React Native</Text>
+      </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -42,18 +51,22 @@ const styles = StyleSheet.create({
 
   scroll: {
     paddingTop: 10,
+    paddingBottom: 8,
   },
 
-  footer: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+  /* ───────── GITHUB FOOTER ───────── */
+  githubFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
     borderTopWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
-    alignItems: "center",
   },
 
-  footerText: {
-    color: "rgba(255,255,255,0.7)",
+  githubText: {
+    color: "rgba(255,255,255,0.85)",
     fontSize: 13,
   },
 
@@ -61,16 +74,31 @@ const styles = StyleSheet.create({
     color: "#ff6b9c",
   },
 
-  githubRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-  },
-
   username: {
     color: "#fff",
-    fontSize: 14,
-    marginLeft: 6,
     fontWeight: "600",
+  },
+
+  /* ───────── APP INFO FOOTER ───────── */
+  appInfoFooter: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "#0b132b",
+  },
+
+  appName: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+
+  appInfo: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 12,
+    lineHeight: 16,
   },
 });
