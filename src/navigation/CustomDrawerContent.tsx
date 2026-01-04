@@ -1,104 +1,89 @@
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from "@react-navigation/drawer";
 import { View, Text, StyleSheet, Pressable, Linking } from "react-native";
+import { DrawerContentScrollView, DrawerItemList } from "@react-navigation/drawer";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Github } from "lucide-react-native";
-import Constants from "expo-constants";
 
 export function CustomDrawerContent(props: any) {
-  const version =
-    Constants.expoConfig?.version ??
-    Constants.manifest?.version ??
-    "1.0.0";
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      {/* SCROLLABLE ITEMS */}
+      {/* SCROLLABLE AREA */}
       <DrawerContentScrollView
         {...props}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + 24,
+          },
+        ]}
       >
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
 
-      {/* GITHUB FOOTER */}
+      {/* GITHUB SECTION */}
       <Pressable
-        style={styles.githubFooter}
+        style={styles.githubRow}
         onPress={() => Linking.openURL("https://github.com/iinorin")}
       >
         <Github size={18} color="#fff" />
-        <Text style={styles.githubText}>
-          Made with <Text style={styles.heart}>💖</Text> by{" "}
-          <Text style={styles.username}>iinorin</Text>
-        </Text>
+        <Text style={styles.githubText}>Made with 💖 by iinorin</Text>
       </Pressable>
 
-      {/* APP INFO FOOTER */}
-      <View style={styles.appInfoFooter}>
+      {/* FIXED FOOTER */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <Text style={styles.appName}>Luna Cycle</Text>
-        <Text style={styles.appInfo}>Version {version}</Text>
-        <Text style={styles.appInfo}>Built with Expo · React Native</Text>
+        <Text style={styles.meta}>Version 1.0.0</Text>
+        <Text style={styles.meta}>Built with Expo · React Native - 12/25</Text>
       </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0b132b",
+    backgroundColor: "rgba(20, 20, 30, 0.85)",
   },
 
-  scroll: {
-    paddingTop: 10,
-    paddingBottom: 8,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
 
-  /* ───────── GITHUB FOOTER ───────── */
-  githubFooter: {
+  githubRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    // alignItems: "center",
+    marginLeft: 20,
     gap: 8,
+    paddingHorizontal: 20,
     paddingVertical: 14,
+    borderTopWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+
+  githubText: {
+    color: "#fff",
+    fontSize: 14,
+    opacity: 0.9,
+  },
+
+  footer: {
+    alignItems: "center",
+    paddingTop: 10,
     borderTopWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
 
-  githubText: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 13,
-  },
-
-  heart: {
-    color: "#ff6b9c",
-  },
-
-  username: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
-  /* ───────── APP INFO FOOTER ───────── */
-  appInfoFooter: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    backgroundColor: "#0b132b",
-  },
-
   appName: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
   },
 
-  appInfo: {
-    color: "rgba(255,255,255,0.6)",
+  meta: {
+    color: "#CBD5E1",
     fontSize: 12,
-    lineHeight: 16,
   },
 });

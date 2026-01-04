@@ -1,8 +1,10 @@
 import { Drawer } from "expo-router/drawer";
+import { CustomDrawerContent } from "@/src/navigation/CustomDrawerContent";
 
 export default function DrawerLayout() {
   return (
     <Drawer
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerType: "slide",
@@ -14,6 +16,7 @@ export default function DrawerLayout() {
         drawerLabelStyle: {
           color: "#fff",
           fontSize: 16,
+          marginTop: 20,
           marginLeft: -10,
         },
         drawerActiveBackgroundColor: "rgba(255,255,255,0.15)",
@@ -29,10 +32,10 @@ export default function DrawerLayout() {
 
       <Drawer.Screen
         name="track-period"
-  options={{ 
-        title: "📊 Track Your Period",
-         }}
-/>
+        options={{
+          title: "📊 Track Your Period",
+        }}
+      />
 
       {/* DRAWER FEATURES */}
       <Drawer.Screen
