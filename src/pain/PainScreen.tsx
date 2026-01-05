@@ -12,7 +12,7 @@ export default function PainScreen() {
   const animatePress = (scale: Animated.Value) => {
     Animated.sequence([
       Animated.timing(scale, {
-        toValue: 0.92,
+        toValue: 0.94,
         duration: 100,
         useNativeDriver: true,
       }),
@@ -24,20 +24,22 @@ export default function PainScreen() {
     ]).start();
   };
 
+  const isSaveEnabled = selected !== null;
+
   return (
     <View style={styles.container}>
       {/* Header Card */}
       <LinearGradient
-        colors={["#fbc2eb", "#a6c1ee"]}
+        colors={["#1f2937", "#2a0724ff"]}
         style={styles.headerCard}
       >
         <Text style={styles.headerTitle}>Pain Today</Text>
         <Text style={styles.headerSubtitle}>
-          Tell us how you're feeling right now
+          Let us know how you feel right now
         </Text>
       </LinearGradient>
 
-      {/* Icon Buttons */}
+      {/* Icons */}
       <View style={styles.iconRow}>
         {/* No Pain */}
         <Pressable
@@ -54,8 +56,8 @@ export default function PainScreen() {
             ]}
           >
             <CheckCircle2
-              size={48}
-              color={selected === "none" ? "#0f5132" : "#4b5563"}
+              size={52}
+              color={selected === "none" ? "#22c55e" : "#9ca3af"}
             />
             <Text
               style={[
@@ -83,8 +85,8 @@ export default function PainScreen() {
             ]}
           >
             <AlertTriangle
-              size={48}
-              color={selected === "pain" ? "#842029" : "#4b5563"}
+              size={52}
+              color={selected === "pain" ? "#ef4444" : "#9ca3af"}
             />
             <Text
               style={[
@@ -97,6 +99,27 @@ export default function PainScreen() {
           </Animated.View>
         </Pressable>
       </View>
+
+      {/* Save Button */}
+      <Pressable
+        disabled={!isSaveEnabled}
+        style={[
+          styles.saveButton,
+          isSaveEnabled ? styles.saveActive : styles.saveDisabled,
+        ]}
+        onPress={() => {
+          // Logic will go here later
+        }}
+      >
+        <Text
+          style={[
+            styles.saveText,
+            !isSaveEnabled && styles.saveTextDisabled,
+          ]}
+        >
+          Save
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -104,7 +127,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#000000e1",
   },
 
   headerCard: {
@@ -117,50 +140,75 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#ffffff",
   },
 
   headerSubtitle: {
     marginTop: 6,
     fontSize: 14,
-    color: "#374151",
+    color: "#9ca3af",
   },
 
   iconRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    alignItems: "center",
+    marginBottom: 50,
   },
 
   iconWrapper: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: "#ffffff",
+    width: 140,
+    height: 140,
+    borderRadius: 20, // square with soft edges
+    backgroundColor: "#111827",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
   },
 
   iconLabel: {
-    marginTop: 10,
-    fontSize: 14,
+    marginTop: 12,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#4b5563",
+    color: "#9ca3af",
   },
 
   activeNoPain: {
-    backgroundColor: "#d1fae5",
+    backgroundColor: "#052e16",
+    borderWidth: 1,
+    borderColor: "#22c55e",
   },
 
   activePain: {
-    backgroundColor: "#fee2e2",
+    backgroundColor: "#450a0a",
+    borderWidth: 1,
+    borderColor: "#ef4444",
   },
 
   activeLabel: {
-    color: "#111827",
+    color: "#ffffff",
+  },
+
+  saveButton: {
+    height: 52,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  saveActive: {
+    backgroundColor: "#ec4899", // app accent
+  },
+
+  saveDisabled: {
+    backgroundColor: "#1f2937",
+  },
+
+  saveText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+
+  saveTextDisabled: {
+    color: "#6b7280",
   },
 });
