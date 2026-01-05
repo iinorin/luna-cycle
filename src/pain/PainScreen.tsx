@@ -1,10 +1,18 @@
-import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Animated,
+  Image,
+} from "react-native";
 import { useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle2, AlertTriangle } from "lucide-react-native";
 
 export default function PainScreen() {
   const [selected, setSelected] = useState<"none" | "pain" | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const scaleNoPain = useRef(new Animated.Value(1)).current;
   const scalePain = useRef(new Animated.Value(1)).current;
@@ -26,11 +34,18 @@ export default function PainScreen() {
 
   const isSaveEnabled = selected !== null;
 
+  const handleSave = () => {
+    if (!selected) return;
+
+    // Later: storage / navigation logic
+    setSaved(true);
+  };
+
   return (
     <View style={styles.container}>
       {/* Header Card */}
       <LinearGradient
-        colors={["#1f2937", "#2a0724ff"]}
+        colors={["#1f2937", "#000000"]}
         style={styles.headerCard}
       >
         <Text style={styles.headerTitle}>Pain Today</Text>
@@ -39,12 +54,13 @@ export default function PainScreen() {
         </Text>
       </LinearGradient>
 
-      {/* Icons */}
+      {/* Icon Buttons */}
       <View style={styles.iconRow}>
         {/* No Pain */}
         <Pressable
           onPress={() => {
             setSelected("none");
+            setSaved(false);
             animatePress(scaleNoPain);
           }}
         >
@@ -74,6 +90,7 @@ export default function PainScreen() {
         <Pressable
           onPress={() => {
             setSelected("pain");
+            setSaved(false);
             animatePress(scalePain);
           }}
         >
@@ -107,9 +124,7 @@ export default function PainScreen() {
           styles.saveButton,
           isSaveEnabled ? styles.saveActive : styles.saveDisabled,
         ]}
-        onPress={() => {
-          // Logic will go here later
-        }}
+        onPress={handleSave}
       >
         <Text
           style={[
@@ -120,6 +135,23 @@ export default function PainScreen() {
           Save
         </Text>
       </Pressable>
+
+      {/* No Pain Message & GIF (ONLY after Save) */}
+      {saved && selected === "none" && (
+        <View style={styles.noPainContainer}>
+          <Text style={styles.noPainTitle}>Yay! No pain today 💖</Text>
+          <Text style={styles.noPainSubtitle}>
+            Hope it stays this way — take care of yourself
+          </Text>
+
+          <Image
+            source={{
+              uri: "https://media1.tenor.com/m/mufcZq84L18AAAAd/pain-go-away.gif",
+            }}
+            style={styles.noPainGif}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -127,14 +159,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#000000e1",
+    backgroundColor: "#000000",
   },
 
   headerCard: {
     borderRadius: 20,
     padding: 20,
     marginBottom: 40,
-    marginTop: 100,
+    marginTop:90,
   },
 
   headerTitle: {
@@ -158,7 +190,7 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 140,
     height: 140,
-    borderRadius: 20, // square with soft edges
+    borderRadius: 20,
     backgroundColor: "#111827",
     justifyContent: "center",
     alignItems: "center",
@@ -195,7 +227,7 @@ const styles = StyleSheet.create({
   },
 
   saveActive: {
-    backgroundColor: "#ec4899", // app accent
+    backgroundColor: "#ec4899",
   },
 
   saveDisabled: {
@@ -210,5 +242,31 @@ const styles = StyleSheet.create({
 
   saveTextDisabled: {
     color: "#6b7280",
+  },
+
+  noPainContainer: {
+    marginTop: 30,
+    alignItems: "center",
+  },
+
+  noPainTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 6,
+  },
+
+  noPainSubtitle: {
+    fontSize: 14,
+    color: "#9ca3af",
+    marginBottom: 16,
+    textAlign: "center",
+    paddingHorizontal: 20,
+  },
+
+  noPainGif: {
+    width: 200,
+    height: 200,
+    borderRadius: 16,
   },
 });
