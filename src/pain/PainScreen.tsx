@@ -1,54 +1,56 @@
-import { View, Pressable, Text, StyleSheet } from "react-native";
-import { painTypes } from "./painTypes";
+import { View, StyleSheet } from "react-native";
+import { useState } from "react";
 
-type Props = {
-  selected: string | null;
-  onSelect: (id: string) => void;
-};
+import PainToggle from "./PainToggle";
+import PainTypeGrid from "./PainTypeGrid";
+import PainLevelBar from "./PainLevelBar";
+import { PainType } from "./painTypes";
 
-export default function PainTypeGrid({ selected, onSelect }: Props) {
+export default function PainScreen() {
+  const [hasPain, setHasPain] = useState<boolean | null>(null);
+  const [selectedPain, setSelectedPain] = useState<PainType | null>(null);
+  const [level, setLevel] = useState(0);
+
   return (
-    <View style={styles.grid}>
-      {painTypes.map((item) => {
-        const Icon = item.icon;
-        const active = selected === item.id;
+    <View style={styles.container}>
+      {/* PAIN / NO PAIN TOGGLE */}
+      <PainToggle value={hasPain} onChange={setHasPain} />
 
-        return (
-          <Pressable
-            key={item.id}
-            style={[styles.card, active && styles.active]}
-            onPress={() => onSelect(item.id)}
-          >
-            <Icon size={22} color="#fff" />
-            <Text style={styles.label}>{item.label}</Text>
-          </Pressable>
-        );
-      })}
+      {/* NO PAIN STATE */}
+      {hasPain === false && (
+        <View style={styles.goodCard}>
+          {/* You can put happy image / companion here */}
+        </View>
+      )}
+
+      {/* PAIN FLOW */}
+      {hasPain === true && (
+        <>
+          {/* BODY PART / PAIN TYPE GRID */}
+          <PainTypeGrid
+            selected={selectedPain}
+            onSelect={setSelectedPain}
+          />
+
+          {/* PAIN LEVEL */}
+          {selectedPain && (
+            <PainLevelBar value={level} onChange={setLevel} />
+          )}
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: {
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  goodCard: {
     marginTop: 24,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  card: {
-    width: "22%",
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    alignItems: "center",
-  },
-  active: {
-    backgroundColor: "rgba(255,80,120,0.3)",
-  },
-  label: {
-    marginTop: 6,
-    fontSize: 11,
-    color: "#ddd",
+    borderRadius: 16,
+    padding: 24,
+    backgroundColor: "#E8FFF3",
   },
 });
