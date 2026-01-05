@@ -1,28 +1,40 @@
-import { View, Pressable, StyleSheet } from "react-native";
-import { PAIN_TYPES } from "./painTypes";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { PAIN_TYPES, PainType } from "./painTypes";
 
 type Props = {
-  selected: string[];
-  onSelect: (id: string) => void;
+  selected: PainType | null;
+  onSelect: (pain: PainType) => void;
 };
 
 export default function PainTypeGrid({ selected, onSelect }: Props) {
   return (
     <View style={styles.grid}>
-      {PAIN_TYPES.map((item) => {
-        const Icon = item.icon;
-        const isActive = selected.includes(item.id);
+      {PAIN_TYPES.map((pain) => {
+        const Icon = pain.icon;
+        const isSelected = selected?.id === pain.id;
 
         return (
           <Pressable
-            key={item.id}
-            onPress={() => onSelect(item.id)}
+            key={pain.id}
+            onPress={() => onSelect(pain)}
             style={[
-              styles.item,
-              isActive && styles.activeItem,
+              styles.card,
+              isSelected && styles.selectedCard,
             ]}
           >
-            <Icon size={24} color={isActive ? "#fff" : "#888"} />
+            <Icon
+              size={26}
+              color={isSelected ? "#fff" : "#333"}
+            />
+
+            <Text
+              style={[
+                styles.label,
+                isSelected && styles.selectedLabel,
+              ]}
+            >
+              {pain.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -35,19 +47,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-    marginTop: 16,
-  },
-
-  item: {
-    width: "22%",
-    aspectRatio: 1,
-    borderRadius: 14,
-    backgroundColor: "#1e1e1e",
-    alignItems: "center",
     justifyContent: "center",
   },
-
-  activeItem: {
-    backgroundColor: "#ff6b81",
+  card: {
+    backgroundColor: "#eee",
+    borderRadius: 14,
+    paddingVertical: 16,
+    width: 110,
+    alignItems: "center",
+  },
+  selectedCard: {
+    backgroundColor: "#ffb4c8",
+  },
+  label: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#333",
+  },
+  selectedLabel: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

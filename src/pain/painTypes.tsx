@@ -10,7 +10,7 @@ import type { LucideIcon } from "lucide-react-native";
 export type PainType = {
   id: string;
   label: string;
-  icon: LucideIcon;
+  icon: LucideIcon; // ✅ FIX HERE
 };
 
 export const PAIN_TYPES: PainType[] = [
@@ -20,18 +20,18 @@ export const PAIN_TYPES: PainType[] = [
     icon: Activity,
   },
   {
-    id: "back",
-    label: "Back",
+    id: "sharp",
+    label: "Sharp Pain",
     icon: Zap,
   },
   {
-    id: "head",
-    label: "Head",
-    icon: CircleDot,
+    id: "burning",
+    label: "Burning",
+    icon: Flame,
   },
   {
-    id: "joint",
-    label: "Joint",
-    icon: Flame,
+    id: "spotting",
+    label: "Spotting",
+    icon: CircleDot,
   },
 ];
