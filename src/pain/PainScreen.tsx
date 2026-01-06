@@ -55,7 +55,7 @@ export default function PainScreen() {
   setSaved(true);
 
   if (selected === "pain") {
-    router.push("/pain/detail");
+    router.push("/pain/PainDetails");
   }
 };
 
