@@ -15,6 +15,7 @@ import {
   savePainForToday,
   PainSelection,
 } from "./painStorage";
+import { router } from "@/.expo/types/router";
 
 export default function PainScreen() {
   const [selected, setSelected] = useState<PainSelection | null>(null);
@@ -48,10 +49,16 @@ export default function PainScreen() {
   };
 
   const handleSave = async () => {
-    if (!selected) return;
-    await savePainForToday(selected);
-    setSaved(true);
-  };
+  if (!selected) return;
+
+  await savePainForToday(selected);
+  setSaved(true);
+
+  if (selected === "pain") {
+    router.push("/pain/detail");
+  }
+};
+
 
   const isSaveEnabled = selected !== null && !saved;
 
