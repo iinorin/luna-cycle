@@ -33,8 +33,13 @@ export const savePainForToday = async (
 export const loadTodayPain = async (): Promise<PainSelection | null> => {
   const today = getTodayDate();
 
-  const [[, storedDate], [, storedSelection]] =
-    await AsyncStorage.multiGet([PAIN_DATE_KEY, PAIN_SELECTION_KEY]);
+  const result = await AsyncStorage.multiGet([
+    PAIN_DATE_KEY,
+    PAIN_SELECTION_KEY,
+  ]);
+
+  const storedDate = result[0][1];
+  const storedSelection = result[1][1];
 
   if (storedDate === today && storedSelection) {
     return storedSelection as PainSelection;
@@ -47,5 +52,8 @@ export const loadTodayPain = async (): Promise<PainSelection | null> => {
  * Clear stored pain data (optional utility)
  */
 export const clearPainData = async (): Promise<void> => {
-  await AsyncStorage.multiRemove([PAIN_DATE_KEY, PAIN_SELECTION_KEY]);
+  await AsyncStorage.multiRemove([
+    PAIN_DATE_KEY,
+    PAIN_SELECTION_KEY,
+  ]);
 };
