@@ -1,15 +1,16 @@
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, Pressable, Image, Dimensions } from "react-native";
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
+import { StatusBar } from "expo-status-bar";
 
+// Ensure this path matches your project structure
 import { painBodyParts } from "./painBodyParts";
 
-export default function PainDetails() {
-  // STEP 1: multiple selection
-  const [selectedParts, setSelectedParts] = useState<string[]>([]);
+const { width } = Dimensions.get("window");
 
-  // STEP 2: pain level
+export default function PainDetails() {
+  const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [painLevel, setPainLevel] = useState(0);
 
   const togglePart = (id: string) => {
@@ -24,11 +25,21 @@ export default function PainDetails() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <StatusBar style="light" />
       <View style={styles.container}>
-        {/* Header */}
-        <Text style={styles.heading}>Where does it hurt?</Text>
+        
+        {/* 1. Header Section */}
+        <View style={styles.headerSection}>
+          <Text style={styles.subHeading}>LOG SYMPTOMS</Text>
+          <Text style={styles.heading}>Where does it hurt?</Text>
+          <View style={styles.indicatorContainer}>
+             {selectedParts.map((_, index) => (
+               <View key={index} style={styles.dot} />
+             ))}
+          </View>
+        </View>
 
-        {/* Body part grid */}
+        {/* 2. Body part grid */}
         <View style={styles.grid}>
           {painBodyParts.map((part) => {
             const selected = selectedParts.includes(part.id);
@@ -37,25 +48,23 @@ export default function PainDetails() {
               <Pressable
                 key={part.id}
                 onPress={() => togglePart(part.id)}
-                style={[
+                style={({ pressed }) => [
                   styles.card,
-                  selected && styles.cardSelected,
+                  pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] }
                 ]}
               >
-                <Image
-                  source={part.image}
-                  style={[
-                    styles.icon,
-                    selected && styles.iconSelected,
-                  ]}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={[
-                    styles.label,
-                    selected && styles.labelSelected,
-                  ]}
-                >
+                {/* Visual Circle around Icon */}
+                <View style={[styles.iconCircle, selected && styles.iconCircleActive]}>
+                  <Image
+                    source={part.image}
+                    style={[
+                      styles.icon,
+                      selected && styles.iconSelected
+                    ]}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={[styles.label, selected && styles.labelSelected]}>
                   {part.label}
                 </Text>
               </Pressable>
@@ -63,35 +72,42 @@ export default function PainDetails() {
           })}
         </View>
 
-        {/* Pain level slider */}
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sliderTitle}>
-            Pain level:{" "}
-            <Text style={styles.sliderValue}>{painLevel}</Text>
-          </Text>
+        {/* 3. Pain level slider */}
+        <View style={[styles.sliderCard, isSliderDisabled && styles.disabledOpacity]}>
+          <View style={styles.sliderHeader}>
+            <Text style={styles.sliderTitle}>Intensity</Text>
+            <View style={styles.badge}>
+                <Text style={styles.sliderValue}>{painLevel}</Text>
+            </View>
+          </View>
 
           <Slider
+            style={styles.slider}
             minimumValue={0}
             maximumValue={10}
             step={1}
             value={painLevel}
             disabled={isSliderDisabled}
             onValueChange={setPainLevel}
-            minimumTrackTintColor={
-              isSliderDisabled ? "#444" : "#ff6b9f"
-            }
-            maximumTrackTintColor="#333"
-            thumbTintColor={
-              isSliderDisabled ? "#555" : "#ff6b9f"
-            }
+            minimumTrackTintColor="#F472B6"
+            maximumTrackTintColor="#334155"
+            thumbTintColor={isSliderDisabled ? "#475569" : "#F472B6"}
           />
-
-          {isSliderDisabled && (
-            <Text style={styles.sliderHint}>
-              Select at least one body part
-            </Text>
-          )}
+          
+          <View style={styles.scaleLabels}>
+            <Text style={styles.scaleText}>Mild</Text>
+            <Text style={styles.scaleText}>Moderate</Text>
+            <Text style={styles.scaleText}>Severe</Text>
+          </View>
         </View>
+
+        {/* 4. Action Button */}
+        <Pressable 
+            style={[styles.saveButton, isSliderDisabled && styles.saveButtonDisabled]}
+            disabled={isSliderDisabled}
+        >
+            <Text style={styles.saveButtonText}>Save Details</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -100,19 +116,41 @@ export default function PainDetails() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#0F172A",
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 24, // fixes “escaping from top”
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  subHeading: {
+    color: '#F472B6',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
     color: "#fff",
     textAlign: "center",
-    marginBottom: 20,
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+    height: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F472B6',
+    marginHorizontal: 3,
   },
   grid: {
     flexDirection: "row",
@@ -120,54 +158,111 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   card: {
-    width: "22%",
-    aspectRatio: 1,
-    borderRadius: 20,
-    backgroundColor: "#121826",
-    marginBottom: 16,
+    width: (width - 68) / 4, 
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 24,
+    backgroundColor: "#1E293B",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  cardSelected: {
-    backgroundColor: "#1e2a44",
-    shadowColor: "#ff6b9f",
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 6,
+  iconCircleActive: {
+    backgroundColor: "#F472B6",
+    borderColor: '#F472B6',
+    shadowColor: "#F472B6",
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 10,
   },
   icon: {
-    width: 36,
-    height: 36,
-    opacity: 0.85,
+    width: 32,
+    height: 32,
+    tintColor: '#94A3B8', // Default color
   },
   iconSelected: {
-    opacity: 1,
+    tintColor: '#FFFFFF', // Selected color
   },
   label: {
-    marginTop: 6,
-    fontSize: 12,
-    color: "#aaa",
+    marginTop: 10,
+    fontSize: 11,
+    color: "#94A3B8",
+    fontWeight: '500',
     textAlign: "center",
   },
   labelSelected: {
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "700",
   },
-  sliderContainer: {
-    marginTop: 28,
+  sliderCard: {
+    marginTop: 'auto',
+    backgroundColor: '#1E293B',
+    padding: 24,
+    borderRadius: 32,
+    marginBottom: 20,
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  badge: {
+    backgroundColor: 'rgba(244, 114, 182, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 114, 182, 0.3)',
   },
   sliderTitle: {
     color: "#fff",
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '600',
   },
   sliderValue: {
-    color: "#ff6b9f",
-    fontWeight: "700",
+    color: "#F472B6",
+    fontSize: 16,
+    fontWeight: "800",
   },
-  sliderHint: {
-    marginTop: 6,
-    fontSize: 12,
-    color: "#777",
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  scaleLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  scaleText: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  disabledOpacity: {
+    opacity: 0.3,
+  },
+  saveButton: {
+    backgroundColor: '#fff',
+    height: 64,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#334155',
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
   },
 });
