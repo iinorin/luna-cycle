@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import { StatusBar } from "expo-status-bar";
 
-// Ensure this path matches your project structure
 import { painBodyParts } from "./painBodyParts";
 
 const { width } = Dimensions.get("window");
@@ -15,31 +14,34 @@ export default function PainDetails() {
 
   const togglePart = (id: string) => {
     setSelectedParts((prev) =>
-      prev.includes(id)
-        ? prev.filter((p) => p !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   };
 
   const isSliderDisabled = selectedParts.length === 0;
+
+  // Function to calculate color based on pain level (0-10)
+  // 0-3: Greenish, 4-7: Yellow/Orange, 8-10: Red
+  const getMeterColor = (level: number) => {
+    if (isSliderDisabled) return "#475569";
+    const hue = ((10 - level) * 12).toString(10); // 120 is green, 0 is red
+    return `hsl(${hue}, 80%, 60%)`;
+  };
+
+  const activeMeterColor = getMeterColor(painLevel);
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.container}>
         
-        {/* 1. Header Section */}
+        {/* Header Section */}
         <View style={styles.headerSection}>
           <Text style={styles.subHeading}>LOG SYMPTOMS</Text>
           <Text style={styles.heading}>Where does it hurt?</Text>
-          <View style={styles.indicatorContainer}>
-             {selectedParts.map((_, index) => (
-               <View key={index} style={styles.dot} />
-             ))}
-          </View>
         </View>
 
-        {/* 2. Body part grid */}
+        {/* Body part grid */}
         <View style={styles.grid}>
           {painBodyParts.map((part) => {
             const selected = selectedParts.includes(part.id);
@@ -53,14 +55,13 @@ export default function PainDetails() {
                   pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] }
                 ]}
               >
-                {/* Visual Circle around Icon */}
-                <View style={[styles.iconCircle, selected && styles.iconCircleActive]}>
+                <View style={[
+                    styles.iconCircle, 
+                    selected && { backgroundColor: activeMeterColor, borderColor: activeMeterColor }
+                ]}>
                   <Image
                     source={part.image}
-                    style={[
-                      styles.icon,
-                      selected && styles.iconSelected
-                    ]}
+                    style={[styles.icon, selected && { tintColor: '#fff' }]}
                     resizeMode="contain"
                   />
                 </View>
@@ -72,12 +73,12 @@ export default function PainDetails() {
           })}
         </View>
 
-        {/* 3. Pain level slider */}
+        {/* Dynamic Intensity Meter */}
         <View style={[styles.sliderCard, isSliderDisabled && styles.disabledOpacity]}>
           <View style={styles.sliderHeader}>
-            <Text style={styles.sliderTitle}>Intensity</Text>
-            <View style={styles.badge}>
-                <Text style={styles.sliderValue}>{painLevel}</Text>
+            <Text style={styles.sliderTitle}>Intensity Meter</Text>
+            <View style={[styles.badge, { borderColor: activeMeterColor + '40', backgroundColor: activeMeterColor + '20' }]}>
+                <Text style={[styles.sliderValue, { color: activeMeterColor }]}>{painLevel}</Text>
             </View>
           </View>
 
@@ -89,24 +90,24 @@ export default function PainDetails() {
             value={painLevel}
             disabled={isSliderDisabled}
             onValueChange={setPainLevel}
-            minimumTrackTintColor="#F472B6"
+            minimumTrackTintColor={activeMeterColor} // Bar changes color
             maximumTrackTintColor="#334155"
-            thumbTintColor={isSliderDisabled ? "#475569" : "#F472B6"}
+            thumbTintColor={activeMeterColor} // Thumb changes color
           />
           
           <View style={styles.scaleLabels}>
-            <Text style={styles.scaleText}>Mild</Text>
-            <Text style={styles.scaleText}>Moderate</Text>
-            <Text style={styles.scaleText}>Severe</Text>
+            <Text style={[styles.scaleText, painLevel <= 3 && { color: activeMeterColor }]}>Low</Text>
+            <Text style={[styles.scaleText, painLevel > 3 && painLevel <= 7 && { color: activeMeterColor }]}>Mid</Text>
+            <Text style={[styles.scaleText, painLevel > 7 && { color: activeMeterColor }]}>High</Text>
           </View>
         </View>
 
-        {/* 4. Action Button */}
+        {/* Action Button */}
         <Pressable 
             style={[styles.saveButton, isSliderDisabled && styles.saveButtonDisabled]}
             disabled={isSliderDisabled}
         >
-            <Text style={styles.saveButtonText}>Save Details</Text>
+            <Text style={styles.saveButtonText}>Save Log</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   subHeading: {
-    color: '#F472B6',
+    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 2,
@@ -139,18 +140,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
     textAlign: "center",
-  },
-  indicatorContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-    height: 4,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#F472B6',
-    marginHorizontal: 3,
   },
   grid: {
     flexDirection: "row",
@@ -172,21 +161,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  iconCircleActive: {
-    backgroundColor: "#F472B6",
-    borderColor: '#F472B6',
-    shadowColor: "#F472B6",
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
-    elevation: 10,
-  },
   icon: {
     width: 32,
     height: 32,
-    tintColor: '#94A3B8', // Default color
-  },
-  iconSelected: {
-    tintColor: '#FFFFFF', // Selected color
+    tintColor: '#94A3B8',
   },
   label: {
     marginTop: 10,
@@ -205,6 +183,8 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 32,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   sliderHeader: {
     flexDirection: 'row',
@@ -213,12 +193,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   badge: {
-    backgroundColor: 'rgba(244, 114, 182, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(244, 114, 182, 0.3)',
   },
   sliderTitle: {
     color: "#fff",
@@ -226,9 +204,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sliderValue: {
-    color: "#F472B6",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "900",
   },
   slider: {
     width: '100%',
@@ -240,9 +217,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scaleText: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#64748B',
-    fontWeight: '600',
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   disabledOpacity: {
@@ -258,7 +235,6 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     backgroundColor: '#334155',
-    opacity: 0.5,
   },
   saveButtonText: {
     fontSize: 16,
