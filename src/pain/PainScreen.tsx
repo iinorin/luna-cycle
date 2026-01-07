@@ -8,12 +8,13 @@ import {
 } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { CheckCircle2, AlertTriangle } from "lucide-react-native";
+import { CheckCircle2, AlertTriangle, Trash2 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 import {
   loadTodayPain,
   savePainForToday,
+  clearPainData,
   PainSelection,
 } from "./painStorage";
 
@@ -60,6 +61,12 @@ export default function PainScreen() {
     if (selected === "pain") {
       router.push("/pain/details");
     }
+  };
+
+  const handleDeleteTodayLog = async () => {
+    await clearPainData();
+    setSelected(null);
+    setSaved(false);
   };
 
   const isSaveEnabled = selected !== null && !saved;
@@ -155,6 +162,17 @@ export default function PainScreen() {
           {saved ? "Saved for today" : "Save"}
         </Text>
       </Pressable>
+
+      {/* Delete Today Log */}
+      {saved && (
+        <Pressable
+          style={styles.deleteButton}
+          onPress={handleDeleteTodayLog}
+        >
+          <Trash2 size={18} color="#f87171" />
+          <Text style={styles.deleteText}>Delete today log</Text>
+        </Pressable>
+      )}
 
       {/* No Pain Message & GIF */}
       {saved && selected === "none" && (
@@ -253,6 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 10,
   },
 
   saveActive: {
@@ -267,6 +286,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#ffffff",
+  },
+
+  deleteButton: {
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  deleteText: {
+    fontSize: 14,
+    color: "#f87171",
+    fontWeight: "600",
   },
 
   noPainContainer: {
