@@ -3,12 +3,14 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native"; // Import navigation hook
 
 import { painBodyParts } from "./painBodyParts";
 
 const { width } = Dimensions.get("window");
 
 export default function PainDetails() {
+  const navigation = useNavigation(); // Initialize navigation
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [painLevel, setPainLevel] = useState(0);
 
@@ -20,7 +22,6 @@ export default function PainDetails() {
 
   const isSliderDisabled = selectedParts.length === 0;
 
-  // Meter Color Logic (HSL: 120 is Green, 0 is Red)
   const getMeterColor = (level: number) => {
     if (isSliderDisabled) return "#475569";
     const hue = Math.max(0, 120 - (level * 12));
@@ -29,33 +30,22 @@ export default function PainDetails() {
 
   const activeMeterColor = getMeterColor(painLevel);
 
-  const getStatusMessage = () => {
-    if (isSliderDisabled) return "Select area to begin";
-    if (painLevel <= 3) return "Mild & Manageable";
-    if (painLevel <= 7) return "Moderate Discomfort";
-    return "Severe - High Intensity";
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.container}>
         
-        {/* Header Section with Dot Indicator */}
+        {/* Header Section */}
         <View style={styles.headerSection}>
           <Text style={styles.subHeading}>SYMPTOM TRACKER</Text>
           <Text style={styles.heading}>Where does it hurt?</Text>
           
-          {/* 🔘 THE DOT INDICATOR */}
           <View style={styles.indicatorContainer}>
             {selectedParts.length === 0 ? (
               <View style={styles.emptyDot} />
             ) : (
               selectedParts.map((id) => (
-                <View 
-                  key={id} 
-                  style={[styles.activeDot, { backgroundColor: activeMeterColor }]} 
-                />
+                <View key={id} style={[styles.activeDot, { backgroundColor: activeMeterColor }]} />
               ))
             )}
           </View>
@@ -76,48 +66,30 @@ export default function PainDetails() {
               >
                 <View style={[
                     styles.iconCircle, 
-                    selected && { 
-                        backgroundColor: activeMeterColor, 
-                        borderColor: activeMeterColor,
-                        shadowColor: activeMeterColor 
-                    }
+                    selected && { backgroundColor: activeMeterColor, borderColor: activeMeterColor, shadowColor: activeMeterColor }
                 ]}>
-                  <Image
-                    source={part.image}
-                    style={[styles.icon, selected && { tintColor: '#fff' }]}
-                    resizeMode="contain"
-                  />
+                  <Image source={part.image} style={[styles.icon, selected && { tintColor: '#fff' }]} resizeMode="contain" />
                 </View>
-                <Text style={[styles.label, selected && styles.labelSelected]}>
-                  {part.label}
-                </Text>
+                <Text style={[styles.label, selected && styles.labelSelected]}>{part.label}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* 🌡️ THE METER SECTION */}
+        {/* Meter Section */}
         <View style={[styles.meterCard, isSliderDisabled && styles.disabledOpacity]}>
           <View style={styles.meterHeader}>
              <View>
                 <Text style={styles.meterTitle}>Intensity Meter</Text>
-                <Text style={[styles.statusText, { color: activeMeterColor }]}>{getStatusMessage()}</Text>
              </View>
              <View style={[styles.valueBadge, { backgroundColor: activeMeterColor }]}>
                 <Text style={styles.valueText}>{painLevel}</Text>
              </View>
           </View>
 
-          {/* Background Meter Bar */}
           <View style={styles.meterTrackBackground}>
              {[...Array(10)].map((_, i) => (
-               <View 
-                key={i} 
-                style={[
-                    styles.meterSegment, 
-                    { backgroundColor: i < painLevel ? getMeterColor(i + 1) : '#0F172A' }
-                ]} 
-               />
+               <View key={i} style={[styles.meterSegment, { backgroundColor: i < painLevel ? getMeterColor(i + 1) : '#0F172A' }]} />
              ))}
           </View>
 
@@ -133,19 +105,29 @@ export default function PainDetails() {
             maximumTrackTintColor="transparent"
             thumbTintColor="#FFFFFF"
           />
-          
-          <View style={styles.scaleLabels}>
-            <Text style={styles.scaleText}>Mild</Text>
-            <Text style={styles.scaleText}>Severe</Text>
-          </View>
         </View>
 
-        <Pressable 
-            style={[styles.saveButton, isSliderDisabled && styles.saveButtonDisabled]}
-            disabled={isSliderDisabled}
-        >
-            <Text style={styles.saveButtonText}>Confirm Entry</Text>
-        </Pressable>
+        {/* BUTTON GROUP */}
+        <View style={styles.buttonGroup}>
+          <Pressable 
+              style={[styles.saveButton, isSliderDisabled && styles.saveButtonDisabled]}
+              onPress={() => {
+                /* Logic to save the data would go here */
+                navigation.goBack();
+              }}
+              disabled={isSliderDisabled}
+          >
+              <Text style={styles.saveButtonText}>Confirm Entry</Text>
+          </Pressable>
+
+          <Pressable 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()} // Sends user back to PainScreen
+          >
+              <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+
       </View>
     </SafeAreaView>
   );
@@ -214,10 +196,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
   icon: {
     width: 28,
@@ -238,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
     padding: 24,
     borderRadius: 30,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   meterHeader: {
     flexDirection: 'row',
@@ -250,11 +228,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: '700',
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 2,
   },
   valueBadge: {
     width: 42,
@@ -288,27 +261,19 @@ const styles = StyleSheet.create({
     height: 40,
     marginTop: -25, 
   },
-  scaleLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 2,
-  },
-  scaleText: {
-    fontSize: 10,
-    color: '#475569',
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
   disabledOpacity: {
     opacity: 0.2,
   },
+  buttonGroup: {
+    marginBottom: 10,
+  },
   saveButton: {
     backgroundColor: '#fff',
-    height: 62,
-    borderRadius: 20,
+    height: 58,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   saveButtonDisabled: {
     backgroundColor: '#334155',
@@ -317,5 +282,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  backButton: {
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B', // Muted color for secondary action
   },
 });
