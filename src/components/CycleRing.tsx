@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   PanResponder,
   Dimensions,
   Animated,
+  Easing,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
@@ -39,7 +40,29 @@ export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [offset, setOffset] = useState(0);
   
+  // Animations
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const breatheAnim = useRef(new Animated.Value(1)).current;
+
+  // Breathing effect loop for the center glow
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheAnim, {
+          toValue: 1.2,
+          duration: 3000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breatheAnim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   const currentPhase: CyclePhase = getPhaseForDay(currentDay, periodLength) ?? "luteal";
   const activeColor = PHASE_COLORS[currentPhase];
@@ -49,7 +72,7 @@ export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
     setSelectedDay(day);
     
     Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 1.08, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1.1, duration: 150, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }),
     ]).start();
   };
@@ -65,21 +88,24 @@ export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
   return (
     <View style={styles.wrapper}>
       
-      {/* 🌌 THE RING STACK */}
       <View style={styles.ringStack}>
         
-        {/* BACKGROUND GLOW - Locked and clipped */}
+        {/* 🌬️ ANIMATED BREATHING GLOW */}
         <Animated.View 
           style={[
             styles.ambientGlow, 
-            { backgroundColor: activeColor, shadowColor: activeColor, transform: [{ scale: scaleAnim }] }
+            { 
+              backgroundColor: activeColor, 
+              shadowColor: activeColor, 
+              transform: [{ scale: Animated.multiply(scaleAnim, breatheAnim) }] 
+            }
           ]} 
         />
 
-        {/* TOUCH AREA - The Ring and Dots */}
+        {/* TOUCH LAYER */}
         <View {...panResponder.panHandlers} style={styles.touchLayer}>
           <View style={styles.glassRing}>
-            <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={15} tint="light" style={StyleSheet.absoluteFill} />
             <View style={styles.rimLightTop} />
             <View style={styles.rimLightBottom} />
           </View>
@@ -108,24 +134,27 @@ export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
           })}
         </View>
 
-        {/* 🔒 FIXED CENTER - Positioned absolutely so it NEVER moves */}
+        {/* 💎 NEW BIGGER, LIGHTER CENTER CIRCLE */}
         <View style={styles.centerLock} pointerEvents="none">
-           <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
-              <Text style={styles.centerSmall}>PHASE</Text>
-              <Text style={[styles.centerBig, { color: activeColor }]}>
-                {currentPhase.toUpperCase()}
+           <Animated.View style={[styles.innerCircle, { transform: [{ scale: scaleAnim }] }]}>
+              <BlurView intensity={40} tint="light" style={styles.innerCircleBlur} />
+              
+              <Text style={styles.labelTitle}>CURRENTLY IN</Text>
+              <Text style={[styles.phaseText, { color: activeColor }]}>
+                {currentPhase}
               </Text>
-              <View style={styles.dayBadge}>
+              
+              <View style={[styles.dayContainer, { borderColor: activeColor }]}>
                 <Text style={styles.dayText}>Day {currentDay}</Text>
               </View>
            </Animated.View>
         </View>
       </View>
 
-      {/* 🃏 TIP CARD */}
+      {/* TIP CARD */}
       {selectedDay !== null && (
         <View style={styles.tipWrapper}>
-          <BlurView intensity={60} tint="dark" style={styles.tipGlass}>
+          <BlurView intensity={80} tint="dark" style={styles.tipGlass}>
             <View style={[styles.tipAccent, { backgroundColor: activeColor }]} />
             <View style={styles.tipContent}>
               <Text style={[styles.tipTitle, { color: activeColor }]}>
@@ -147,8 +176,8 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   ringStack: {
-    width: RING_SIZE + 60,
-    height: RING_SIZE + 60,
+    width: RING_SIZE + 80,
+    height: RING_SIZE + 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -161,35 +190,35 @@ const styles = StyleSheet.create({
   },
   ambientGlow: {
     position: "absolute",
-    width: RING_SIZE * 0.6,
-    height: RING_SIZE * 0.6,
+    width: RING_SIZE * 0.75,
+    height: RING_SIZE * 0.75,
     borderRadius: 1000,
-    opacity: 0.3,
+    opacity: 0.25,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 60,
+    shadowOpacity: 0.8,
+    shadowRadius: 50,
     elevation: 20,
   },
   glassRing: {
     width: RING_SIZE + 40,
     height: RING_SIZE + 40,
     borderRadius: 1000,
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: "rgba(255, 255, 255, 0.2)",
     overflow: "hidden",
     position: "absolute",
   },
   rimLightTop: {
     position: "absolute",
     top: 0, width: '100%', height: '50%',
-    borderTopWidth: 2, borderColor: 'rgba(255,255,255,0.15)',
+    borderTopWidth: 2, borderColor: 'rgba(255,255,255,0.3)',
     borderRadius: 1000,
   },
   rimLightBottom: {
     position: "absolute",
     bottom: 0, width: '100%', height: '50%',
-    borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
+    borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
     borderRadius: 1000,
   },
   centerLock: {
@@ -198,54 +227,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  centerSmall: {
-    color: "rgba(255, 255, 255, 0.4)",
-    fontSize: 10,
-    fontWeight: "900",
+  innerCircle: {
+    width: RING_SIZE * 0.65,
+    height: RING_SIZE * 0.65,
+    borderRadius: 1000,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  innerCircleBlur: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  labelTitle: {
+    color: "rgba(255, 255, 255, 0.6)",
+    fontSize: 11,
+    fontWeight: "700",
     letterSpacing: 2,
+    marginBottom: 2,
   },
-  centerBig: {
-    fontSize: 28,
+  phaseText: {
+    fontSize: 32,
     fontWeight: "900",
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textTransform: 'capitalize',
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    textShadowRadius: 6,
   },
-  dayBadge: {
-    marginTop: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  dayContainer: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   dayText: {
     color: "#FFF",
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "800",
   },
   tipWrapper: {
     width: width - 40,
-    marginTop: 40,
+    marginTop: 30,
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   tipGlass: { flexDirection: 'row', padding: 22 },
-  tipAccent: { width: 4, borderRadius: 10, height: '100%', marginRight: 15 },
+  tipAccent: { width: 5, borderRadius: 10, height: '100%', marginRight: 15 },
   tipContent: { flex: 1 },
-  tipTitle: { fontSize: 11, fontWeight: '900', letterSpacing: 1.2, marginBottom: 8, textTransform: 'uppercase' },
+  tipTitle: { fontSize: 11, fontWeight: '900', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' },
   dotWrapper: { position: "absolute", alignItems: "center", justifyContent: "center" },
   activeHalo: {
     position: "absolute",
     width: ACTIVE_DOT_SIZE + 14,
     height: ACTIVE_DOT_SIZE + 14,
     borderRadius: 100,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderStyle: 'dashed',
-    opacity: 0.5,
+    opacity: 0.6,
   },
 });
