@@ -1,173 +1,164 @@
-import React, { useMemo, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { CyclePhase } from "@/src/cycle/types";
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
-type Props = {
+type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'safe';
+
+interface ThemeConfig {
+  readonly colors: readonly [string, string, ...string[]]; 
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+}
+
+interface TipsSuggesterProps {
   phase: CyclePhase;
   currentDay: number;
+}
+
+
+const PHASE_THEMES: Record<CyclePhase, ThemeConfig> = {
+  menstrual: { colors: ['#F472B6', '#9D174D'] as const, icon: 'water-outline', label: 'Self-Care' },
+  follicular: { colors: ['#5EEAD4', '#0D9488'] as const, icon: 'flash-outline', label: 'Energy' },
+  ovulation: { colors: ['#FBBF24', '#B45309'] as const, icon: 'heart-outline', label: 'Social' },
+  luteal: { colors: ['#A78BFA', '#5B21B6'] as const, icon: 'moon-outline', label: 'Rest' },
+  safe: { colors: ['#38BDF8', '#0369A1'] as const, icon: 'shield-checkmark-outline', label: 'Stable' },
 };
 
-const PHASE_TIPS = {
-  menstrual: [
-    "Rest is productive today 🛌❤️",
-    "Warm foods help cramps ☕🔥",
-    "Gentle stretching helps 🧘‍♀️",
-    "Drink more water 💧",
-    "Low energy is normal 🐢",
-    "Iron-rich foods help 🥬",
-    "Take breaks guilt-free 🌿",
-    "Heat therapy feels good ♨️",
-    "Be kind to yourself 💕",
-    "Comfort comes first 🌙",
-  ],
-
-  follicular: [
-    "Energy is rising 🌱",
-    "Great time to plan 📚",
-    "Light workouts feel easy 🏃‍♀️",
-    "Focus improves 🎯",
-    "Eat fresh foods 🥗",
-    "Creativity flows 🎨",
-    "Social energy increases 🫶",
-    "Skin may glow ✨",
-    "Set intentions 📝",
-    "Confidence builds 🌼",
-  ],
-
-  ovulation: [
-    "Confidence peaks ✨🔥",
-    "Great time to talk 🗣️",
-    "Body feels strong 💪",
-    "High-energy workouts rock 🏋️‍♀️",
-    "Express yourself 💖",
-    "Social plans shine 🥂",
-    "Hair & skin glow ✨",
-    "Trust instincts 🔮",
-    "Hydrate well 💧",
-    "Perfect for bonding 💕",
-  ],
-
-  safe: [
-    "Your body feels balanced 🌿",
-    "Stick to routines ⚖️",
-    "Moderate workouts work 🚶‍♀️",
-    "Clear mental state 🧠",
-    "Maintain habits 🌱",
-    "Emotions feel steady 💙",
-    "Productivity flows 🛠️",
-    "Self-care feels grounding 🛁",
-    "Hydrate & nourish 💧",
-    "Enjoy the calm 🌸",
-  ],
-
-  luteal: [
-    "Slow down 🌙",
-    "Finish tasks first ✅",
-    "Cravings are normal 🍫",
-    "Strong intuition 🔮",
-    "Organizing feels good 🗂️",
-    "Sleep matters 😴",
-    "Gentle movement helps 🚶‍♀️",
-    "Mood shifts are okay 🌬️",
-    "Journaling helps 📓",
-    "Prepare for rest 💜",
-  ],
-} as const;
-
-/** ✅ Type-safe gradient colors */
-const PHASE_GRADIENTS: Record<
-  CyclePhase,
-  readonly [string, string]
-> = {
-  menstrual: ["#FADADD", "#F472B6"],
-  follicular: ["#E6F4EA", "#86EFAC"],
-  ovulation: ["#FFF3C4", "#FACC15"],
-  safe: ["#E0F2FE", "#38BDF8"],
-  luteal: ["#EDE7F6", "#A78BFA"],
-};
-
-export function TipsSuggester({ phase, currentDay }: Props) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(10)).current;
+export function TipsSuggester({ phase, currentDay }: TipsSuggesterProps) {
+  const theme = PHASE_THEMES[phase] || PHASE_THEMES.luteal;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [phase]);
-
-  const tip = useMemo(() => {
-    const tips = PHASE_TIPS[phase];
-    return tips[currentDay % tips.length];
-  }, [phase, currentDay]);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.12,
+          duration: 2500,
+          easing: Easing.out(Easing.sin), // Fixed Easing property name
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.in(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   return (
-    <Animated.View
-      style={[
-        styles.wrapper,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <LinearGradient
-        colors={PHASE_GRADIENTS[phase]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <BlurView intensity={22} tint="dark" style={styles.container}>
-          <Text style={styles.label}>Daily Tip</Text>
-          <Text style={styles.tip}>{tip}</Text>
-        </BlurView>
-      </LinearGradient>
-    </Animated.View>
+    <View style={styles.container}>
+      {/* Dynamic Background Glow */}
+      <Animated.View 
+        style={[
+          styles.glow, 
+          { backgroundColor: theme.colors[0], transform: [{ scale: pulseAnim }] }
+        ]} 
+      />
+
+      <BlurView intensity={30} tint="light" style={styles.glassCard}>
+        {/* Flare Gradient - Added 'as const' here too */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'transparent'] as const}
+          style={StyleSheet.absoluteFill}
+        />
+        
+        <View style={styles.headerRow}>
+          <LinearGradient colors={theme.colors} style={styles.iconBox}>
+            <Ionicons name={theme.icon} size={18} color="white" />
+          </LinearGradient>
+          
+          <View style={styles.textColumn}>
+            <Text style={[styles.tag, { color: theme.colors[0] }]}>
+              {theme.label.toUpperCase()}
+            </Text>
+            <Text style={styles.title}>Daily Insight • Day {currentDay}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.tipText}>
+          Your {phase} energy is rising. This is the perfect time for high-intensity tasks and creative brainstorming.
+        </Text>
+
+        <View style={styles.footer}>
+          <Text style={styles.actionText}>Read full guide</Text>
+          <Ionicons name="chevron-forward" size={12} color="white" />
+        </View>
+      </BlurView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginHorizontal: 20,
-    marginBottom: 18,
-  },
-
-  gradient: {
-    borderRadius: 22,
-    padding: 1,
-  },
-
   container: {
-    borderRadius: 22,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
+    marginVertical: 15,
+    paddingHorizontal: 16,
+    width: '100%',
+    alignItems: 'center',
+  },
+  glow: {
+    position: 'absolute',
+    width: '60%',
+    height: 60,
+    borderRadius: 100,
+    opacity: 0.15,
+    top: 20,
+  },
+  glassCard: {
+    width: '100%',
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: 'rgba(255,255,255,0.25)',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-
-  label: {
-    fontSize: 12,
-    color: "#CBD5E1",
-    letterSpacing: 0.4,
-    marginBottom: 6,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-
-  tip: {
-    fontSize: 15,
-    color: "#FFFFFF",
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  textColumn: {
+    flex: 1,
+  },
+  tag: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  tipText: {
+    fontSize: 14,
     lineHeight: 22,
-    fontWeight: "600",
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
   },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 18,
+    opacity: 0.7,
+  },
+  actionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginRight: 4,
+    color: '#FFF',
+  }
 });
