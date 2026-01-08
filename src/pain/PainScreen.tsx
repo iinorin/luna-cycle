@@ -11,29 +11,39 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle2, AlertTriangle, Trash2 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
-import {
-  loadTodayPain,
-  savePainForToday,
-  clearPainData,
-  PainSelection,
-} from "./painDailyStorage";
+import { loadTodayPain } from "./painDailyStorage";
+import { savePainForToday, clearPainData, PainSelection } from "./painDailyStorage";
 
 export default function PainScreen() {
   const router = useRouter();
 
   const [selected, setSelected] = useState<PainSelection | null>(null);
   const [saved, setSaved] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const scaleNoPain = useRef(new Animated.Value(1)).current;
   const scalePain = useRef(new Animated.Value(1)).current;
 
+  /**
+   * 🔁 HYDRATE TODAY'S STATE
+   * Runs once when screen opens (drawer click, app reopen, etc.)
+   */
   useEffect(() => {
     (async () => {
       const value = await loadTodayPain();
+
       if (value) {
         setSelected(value);
         setSaved(true);
+
+        // ✅ If pain was already selected today → go straight to details
+        if (value === "pain") {
+          router.replace("/pain/details");
+          return;
+        }
       }
+
+      setHydrated(true);
     })();
   }, []);
 
@@ -52,6 +62,9 @@ export default function PainScreen() {
     ]).start();
   };
 
+  /**
+   * 💾 SAVE FOR TODAY
+   */
   const handleSave = async () => {
     if (!selected) return;
 
@@ -59,10 +72,13 @@ export default function PainScreen() {
     setSaved(true);
 
     if (selected === "pain") {
-      router.push("/pain/details");
+      router.replace("/pain/details");
     }
   };
 
+  /**
+   * 🗑 DELETE TODAY'S LOG
+   */
   const handleDeleteTodayLog = async () => {
     await clearPainData();
     setSelected(null);
@@ -70,6 +86,11 @@ export default function PainScreen() {
   };
 
   const isSaveEnabled = selected !== null && !saved;
+
+  // ⛔ Prevent flicker before hydration
+  if (!hydrated) {
+    return <View style={{ flex: 1, backgroundColor: "#000" }} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -174,7 +195,7 @@ export default function PainScreen() {
         </Pressable>
       )}
 
-      {/* No Pain Message & GIF */}
+      {/* No Pain Message */}
       {saved && selected === "none" && (
         <View style={styles.noPainContainer}>
           <View style={styles.noPainTitleRow}>
@@ -197,6 +218,7 @@ export default function PainScreen() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

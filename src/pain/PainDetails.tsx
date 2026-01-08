@@ -8,7 +8,7 @@ import {
   Modal,
   Animated,
 } from "react-native";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { painBodyParts } from "./painBodyParts";
+import {
+  loadTodayPainDetails,
+  savePainDetails
+} from "./painDetailsStorage";
 
 const { width } = Dimensions.get("window");
 
@@ -27,13 +31,30 @@ export default function PainDetails() {
   const [showSuccess, setShowSuccess] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  /* 🔁 Load today's saved pain details (if any) */
+  useEffect(() => {
+    (async () => {
+      const saved = await loadTodayPainDetails();
+      if (saved) {
+        setSelectedParts(saved.bodyParts);
+        setPainLevel(saved.level);
+
+      }
+    })();
+  }, []);
+
   const togglePart = (id: string) => {
     setSelectedParts((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    await savePainDetails({
+      bodyParts: selectedParts,
+      level: painLevel,
+    });
+
     setShowSuccess(true);
 
     Animated.timing(fadeAnim, {
@@ -44,7 +65,7 @@ export default function PainDetails() {
 
     setTimeout(() => {
       setShowSuccess(false);
-      router.replace("/insights"); // ✅ Expo Router navigation
+      router.replace("/insights");
     }, 2500);
   };
 
@@ -105,7 +126,6 @@ export default function PainDetails() {
                     selected && {
                       backgroundColor: activeMeterColor,
                       borderColor: activeMeterColor,
-                      shadowColor: activeMeterColor,
                     },
                   ]}
                 >
@@ -200,7 +220,7 @@ export default function PainDetails() {
 
           <Pressable
             style={styles.backButton}
-            onPress={() => router.back()} // ✅ Safe
+            onPress={() => router.back()}
           >
             <Text style={styles.backButtonText}>Go Back</Text>
           </Pressable>
@@ -244,23 +264,12 @@ export default function PainDetails() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
+  safe: { flex: 1, backgroundColor: "#0F172A" },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
 
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 10,
-  },
-
-  /* HEADER */
-  headerSection: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
+  headerSection: { alignItems: "center", marginBottom: 24 },
   subHeading: {
     color: "#64748B",
     fontSize: 10,
@@ -268,11 +277,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 4,
   },
-  heading: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#fff",
-  },
+  heading: { fontSize: 26, fontWeight: "800", color: "#fff" },
 
   indicatorContainer: {
     flexDirection: "row",
@@ -293,7 +298,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
 
-  /* GRID */
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -304,6 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     alignItems: "center",
   },
+
   iconCircle: {
     width: 62,
     height: 62,
@@ -325,11 +330,8 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "600",
   },
-  labelSelected: {
-    color: "#fff",
-  },
+  labelSelected: { color: "#fff" },
 
-  /* METER */
   meterCard: {
     marginTop: "auto",
     backgroundColor: "#1E293B",
@@ -382,14 +384,9 @@ const styles = StyleSheet.create({
     marginTop: -25,
   },
 
-  disabledOpacity: {
-    opacity: 0.2,
-  },
+  disabledOpacity: { opacity: 0.2 },
 
-  /* BUTTONS */
-  buttonGroup: {
-    marginBottom: 10,
-  },
+  buttonGroup: { marginBottom: 10 },
   saveButton: {
     backgroundColor: "#fff",
     height: 58,
@@ -398,9 +395,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  saveButtonDisabled: {
-    backgroundColor: "#334155",
-  },
+  saveButtonDisabled: { backgroundColor: "#334155" },
   saveButtonText: {
     fontSize: 16,
     fontWeight: "800",
@@ -417,7 +412,6 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
 
-  /* SUCCESS MODAL */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
