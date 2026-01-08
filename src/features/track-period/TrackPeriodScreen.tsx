@@ -18,7 +18,6 @@ import {
 } from "./storage";
 
 import {
-  shouldShowCycleGuard,
   markCycleGuardSeen,
   resetCycleGuard,
 } from "./cycleGuard";
@@ -52,10 +51,10 @@ export default function TrackPeriodScreen() {
         setShowGuard(false);
 
         const existing = await getCycleData();
-        if (!existing || !mounted) return;
-
-        const shouldShow = await shouldShowCycleGuard();
-        if (shouldShow && mounted) {
+        
+        // BUG FIX: Instead of checking a "Seen" flag, we check if data exists.
+        // If data exists, we ALWAYS show the guard to prevent accidental overwriting.
+        if (existing && mounted) {
           setShowGuard(true);
         }
       };
@@ -69,14 +68,13 @@ export default function TrackPeriodScreen() {
   );
 
   /**
-   * SUCCESS SCREEN
+   * SUCCESS SCREEN (Step 7)
    */
   if (step === 7) {
     return (
       <View style={styles.screen}>
         <StepSuccess
           onGoHome={() => {
-            // ✅ FORCE full refresh
             router.replace("/cycle");
           }}
         />
@@ -154,7 +152,7 @@ export default function TrackPeriodScreen() {
                 symptoms: data.symptoms,
               });
 
-              await resetCycleGuard(); // ✅ correct place
+              await resetCycleGuard(); 
               setStep(7);
             }}
           />
@@ -164,12 +162,15 @@ export default function TrackPeriodScreen() {
       {/* 🧊 GUARD MODAL */}
       <CycleDataGuardModal
         visible={showGuard}
-        onKeep={async () => {
-          await markCycleGuardSeen();
+        onKeep={() => {
+          // ✅ FIX: Do NOT call markCycleGuardSeen() here.
+          // By just hiding the guard and redirecting, the "Seen" status stays false.
           setShowGuard(false);
-          router.replace("/insights"); // ✅ refresh
+          router.replace("/insights"); 
         }}
         onUpdate={async () => {
+          // We mark it seen here because the user has intentionally 
+          // decided to move forward with the update process.
           await markCycleGuardSeen();
           setShowGuard(false);
           setData(INITIAL_DATA);
