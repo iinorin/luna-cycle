@@ -16,7 +16,7 @@ import {
   savePainForToday,
   clearPainData,
   PainSelection,
-} from "./painStorage";
+} from "./painDailyStorage";
 
 export default function PainScreen() {
   const router = useRouter();
