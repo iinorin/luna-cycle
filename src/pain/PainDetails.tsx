@@ -220,7 +220,15 @@ export default function PainDetails() {
 
           <Pressable
             style={styles.backButton}
-            onPress={() => router.back()}
+           
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/insights");
+              }
+            }}
+
           >
             <Text style={styles.backButtonText}>Go Back</Text>
           </Pressable>

@@ -94,7 +94,7 @@ export default function PainScreen() {
     setSaved(true);
 
     if (selected === "pain") {
-      router.replace("/pain/details");
+      router.push("/pain/details");
     }
   };
 
