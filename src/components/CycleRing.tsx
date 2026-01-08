@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   PanResponder,
   ColorValue,
   Dimensions,
+  Animated,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
@@ -16,32 +17,37 @@ import { DayInfoCard } from "./DayInfoCard";
 import { getPhaseForDay } from "@/src/cycle/state";
 import { CyclePhase } from "@/src/cycle/types";
 
-type Props = {
-  cycleLength: number;
-  periodLength: number;
-  currentDay: number;
-};
-
 const { width } = Dimensions.get("window");
-const RING_SIZE = width * 0.7; // Responsive sizing
+const RING_SIZE = width * 0.75;
 const DOT_RADIUS = RING_SIZE / 2;
 const DOT_SIZE = 12;
 const ACTIVE_DOT_SIZE = 22;
 
 const PHASE_COLORS: Record<CyclePhase, string> = {
-  menstrual: "#F472B6", // Pink
-  follicular: "#5EEAD4", // Teal
-  ovulation: "#FBBF24", // Gold
-  safe: "#38BDF8",      // Sky Blue
-  luteal: "#A78BFA",    // Lavender
+  menstrual: "#F472B6", follicular: "#5EEAD4",
+  ovulation: "#FBBF24", safe: "#38BDF8", luteal: "#A78BFA",
 };
 
 export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [offset, setOffset] = useState(0);
+  
+  // Animation for the "3D Pulse" on touch
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const currentPhase: CyclePhase = getPhaseForDay(currentDay, periodLength) ?? "luteal";
   const activeColor = PHASE_COLORS[currentPhase];
+
+  const handleDayPress = (day: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedDay(day);
+    
+    // 3D Pop Animation
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.05, duration: 100, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start();
+  };
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 30,
@@ -53,73 +59,72 @@ export function CycleRing({ cycleLength, periodLength, currentDay }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      
-      {/* 1. BACKGROUND AMBIENT GLOW */}
-      {/* This creates the soft "light bleed" behind the glass */}
-      <View style={[styles.ambientGlow, { backgroundColor: activeColor, shadowColor: activeColor }]} />
+      {/* 🌌 AMBIENT 3D GLOW (Behind everything) */}
+      <Animated.View 
+        style={[
+          styles.ambientGlow, 
+          { backgroundColor: activeColor, shadowColor: activeColor, transform: [{ scale: scaleAnim }] }
+        ]} 
+      />
 
       <View {...panResponder.panHandlers} style={styles.container}>
         
-        {/* 2. THE GLASS DISK (The Frosted Ring) */}
-        <View style={styles.glassDisk}>
-          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          
-          {/* Inner Rim Light for 3D depth */}
-          <View style={styles.rimLight} />
-          
-          {/* Subtle Path for the dots */}
-          <View style={styles.dashedTrack} />
+        {/* 🧊 THE 3D GLASS RING */}
+        <View style={styles.glassRing}>
+          <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
+          <View style={styles.rimLightTop} />
+          <View style={styles.rimLightBottom} />
         </View>
 
-        {/* 3. CENTER CONTENT CARD (Floating above the glass) */}
-        <View style={styles.centerCard}>
+        {/* 🔘 CENTER CONTENT (Transparent/3D Layered) */}
+        <Animated.View style={[styles.centerContent, { transform: [{ scale: scaleAnim }] }]}>
           <Text style={styles.centerSmall}>CURRENT PHASE</Text>
-          <Text style={styles.centerBig}>{currentPhase.toUpperCase()}</Text>
-          
-          <LinearGradient
-            colors={[activeColor, activeColor + 'CC']}
-            style={styles.dayBadge}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
+          <Text style={[styles.centerBig, { color: activeColor }]}>
+            {currentPhase.toUpperCase()}
+          </Text>
+          <View style={styles.dayIndicator}>
             <Text style={styles.dayText}>Day {currentDay}</Text>
-          </LinearGradient>
-        </View>
+          </View>
+        </Animated.View>
 
-        {/* 4. THE DOTS SYSTEM */}
+        {/* 🔮 DOTS SYSTEM */}
         {Array.from({ length: cycleLength }).map((_, i) => {
           const day = i + 1 + offset;
           const angle = (2 * Math.PI * i) / cycleLength - Math.PI / 2;
-
-          // Adjust X and Y to center dots on the ring path
           const x = RING_SIZE / 2 + DOT_RADIUS * Math.cos(angle) - (day === currentDay ? ACTIVE_DOT_SIZE : DOT_SIZE) / 2;
           const y = RING_SIZE / 2 + DOT_RADIUS * Math.sin(angle) - (day === currentDay ? ACTIVE_DOT_SIZE : DOT_SIZE) / 2;
-
           const phase: CyclePhase = getPhaseForDay(day, periodLength) ?? "luteal";
 
           return (
             <View
               key={i}
               style={[styles.dotWrapper, { left: x, top: y }]}
-              onTouchEnd={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSelectedDay(day);
-              }}
+              onTouchEnd={() => handleDayPress(day)}
             >
               <CycleDot
                 phase={phase}
                 isActive={day === currentDay}
                 size={day === currentDay ? ACTIVE_DOT_SIZE : DOT_SIZE}
               />
-              {day === currentDay && <View style={[styles.activeHalo, { borderColor: activeColor }]} />}
+              {day === currentDay && (
+                <View style={[styles.activeHalo, { borderColor: activeColor }]} />
+              )}
             </View>
           );
         })}
       </View>
 
-      {/* 5. SELECTION INFO */}
+      {/* 🃏 IMPROVED TIP CARD (DayInfoCard) */}
       {selectedDay !== null && (
-        <DayInfoCard day={selectedDay} periodLength={periodLength} />
+        <View style={styles.tipContainer}>
+          <LinearGradient
+            colors={['rgba(30, 41, 59, 0.95)', 'rgba(15, 23, 42, 1)']}
+            style={styles.tipCard}
+          >
+            <View style={[styles.tipAccent, { backgroundColor: activeColor }]} />
+            <DayInfoCard day={selectedDay} periodLength={periodLength} />
+          </LinearGradient>
+        </View>
       )}
     </View>
   );
@@ -133,14 +138,14 @@ const styles = StyleSheet.create({
   },
   ambientGlow: {
     position: "absolute",
-    width: RING_SIZE * 0.8,
-    height: RING_SIZE * 0.8,
+    width: RING_SIZE * 0.7,
+    height: RING_SIZE * 0.7,
     borderRadius: RING_SIZE,
-    opacity: 0.25,
+    opacity: 0.3,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 60,
-    elevation: 20, // Android glow fallback
+    shadowRadius: 80,
+    elevation: 20,
   },
   container: {
     width: RING_SIZE,
@@ -148,92 +153,85 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  glassDisk: {
-    width: RING_SIZE + 60,
-    height: RING_SIZE + 60,
-    borderRadius: (RING_SIZE + 60) / 2,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+  glassRing: {
+    width: RING_SIZE + 50,
+    height: RING_SIZE + 50,
+    borderRadius: (RING_SIZE + 50) / 2,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
+    borderColor: "rgba(255, 255, 255, 0.12)",
     overflow: "hidden",
     position: "absolute",
   },
-  rimLight: {
+  rimLightTop: {
     position: "absolute",
-    top: 5,
-    left: 5,
-    right: 5,
-    bottom: 5,
+    top: 0, width: '100%', height: '50%',
+    borderTopWidth: 2,
+    borderColor: 'rgba(255,255,255,0.15)',
     borderRadius: RING_SIZE,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  dashedTrack: {
-    position: "absolute",
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-    borderStyle: "dashed",
-    top: 30,
-    left: 30,
-  },
-  centerCard: {
-    position: "absolute",
+  centerContent: {
     alignItems: "center",
     justifyContent: "center",
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: "#0F172A", // Dark slate background
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.12)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 15,
+    zIndex: 10,
   },
   centerSmall: {
-    color: "rgba(148, 163, 184, 0.8)",
+    color: "rgba(255, 255, 255, 0.5)",
     fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.5,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
   centerBig: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-    marginTop: 4,
-    textAlign: "center",
+    fontSize: 28,
+    fontWeight: "900",
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 10,
   },
-  dayBadge: {
-    marginTop: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+  dayIndicator: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   dayText: {
-    color: "#FFFFFF",
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "700",
   },
-  dotWrapper: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
+  tipContainer: {
+    marginTop: 40,
+    width: width - 40,
+    padding: 2,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)', // Outline
   },
+  tipCard: {
+    borderRadius: 22,
+    padding: 20,
+    overflow: 'hidden',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
+  tipAccent: {
+    position: 'absolute',
+    left: 0, top: 0, bottom: 0,
+    width: 6,
+  },
+  // Dot Styles...
+  dotWrapper: { position: "absolute", alignItems: "center", justifyContent: "center" },
   activeHalo: {
     position: "absolute",
-    width: ACTIVE_DOT_SIZE + 12,
-    height: ACTIVE_DOT_SIZE + 12,
-    borderRadius: (ACTIVE_DOT_SIZE + 12) / 2,
-    borderWidth: 2,
-    opacity: 0.5,
+    width: ACTIVE_DOT_SIZE + 15,
+    height: ACTIVE_DOT_SIZE + 15,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    opacity: 0.6,
   },
 });
