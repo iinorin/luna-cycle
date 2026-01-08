@@ -1,13 +1,18 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
-type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'safe';
+type CyclePhase =
+  | "menstrual"
+  | "follicular"
+  | "ovulation"
+  | "luteal"
+  | "safe";
 
 interface ThemeConfig {
-  readonly colors: readonly [string, string, ...string[]]; 
+  readonly colors: readonly [string, string];
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
 }
@@ -17,75 +22,64 @@ interface TipsSuggesterProps {
   currentDay: number;
 }
 
-
 const PHASE_THEMES: Record<CyclePhase, ThemeConfig> = {
-  menstrual: { colors: ['#F472B6', '#9D174D'] as const, icon: 'water-outline', label: 'Self-Care' },
-  follicular: { colors: ['#5EEAD4', '#0D9488'] as const, icon: 'flash-outline', label: 'Energy' },
-  ovulation: { colors: ['#FBBF24', '#B45309'] as const, icon: 'heart-outline', label: 'Social' },
-  luteal: { colors: ['#A78BFA', '#5B21B6'] as const, icon: 'moon-outline', label: 'Rest' },
-  safe: { colors: ['#38BDF8', '#0369A1'] as const, icon: 'shield-checkmark-outline', label: 'Stable' },
+  menstrual: {
+    colors: ["#F472B6", "#9D174D"],
+    icon: "water-outline",
+    label: "Self-Care",
+  },
+  follicular: {
+    colors: ["#5EEAD4", "#0D9488"],
+    icon: "flash-outline",
+    label: "Energy",
+  },
+  ovulation: {
+    colors: ["#FBBF24", "#B45309"],
+    icon: "heart-outline",
+    label: "Social",
+  },
+  luteal: {
+    colors: ["#A78BFA", "#5B21B6"],
+    icon: "moon-outline",
+    label: "Rest",
+  },
+  safe: {
+    colors: ["#38BDF8", "#0369A1"],
+    icon: "shield-checkmark-outline",
+    label: "Stable",
+  },
 };
 
 export function TipsSuggester({ phase, currentDay }: TipsSuggesterProps) {
   const theme = PHASE_THEMES[phase] || PHASE_THEMES.luteal;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.12,
-          duration: 2500,
-          easing: Easing.out(Easing.sin), // Fixed Easing property name
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2500,
-          easing: Easing.in(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
 
   return (
     <View style={styles.container}>
-      {/* Dynamic Background Glow */}
-      <Animated.View 
-        style={[
-          styles.glow, 
-          { backgroundColor: theme.colors[0], transform: [{ scale: pulseAnim }] }
-        ]} 
-      />
+      {/* Floating Card */}
+      <BlurView intensity={22} tint="dark" style={styles.card}>
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.headerRow}>
+            <LinearGradient
+              colors={theme.colors}
+              style={styles.iconBox}
+            >
+              <Ionicons name={theme.icon} size={18} color="#fff" />
+            </LinearGradient>
 
-      <BlurView intensity={30} tint="light" style={styles.glassCard}>
-        {/* Flare Gradient - Added 'as const' here too */}
-        <LinearGradient
-          colors={['rgba(255,255,255,0.2)', 'transparent'] as const}
-          style={StyleSheet.absoluteFill}
-        />
-        
-        <View style={styles.headerRow}>
-          <LinearGradient colors={theme.colors} style={styles.iconBox}>
-            <Ionicons name={theme.icon} size={18} color="white" />
-          </LinearGradient>
-          
-          <View style={styles.textColumn}>
-            <Text style={[styles.tag, { color: theme.colors[0] }]}>
-              {theme.label.toUpperCase()}
-            </Text>
-            <Text style={styles.title}>Daily Insight • Day {currentDay}</Text>
+            <View>
+              <Text style={[styles.tag, { color: theme.colors[0] }]}>
+                {theme.label.toUpperCase()} INSIGHT
+              </Text>
+              <Text style={styles.day}>Day {currentDay}</Text>
+            </View>
           </View>
-        </View>
 
-        <Text style={styles.tipText}>
-          Your {phase} energy is rising. This is the perfect time for high-intensity tasks and creative brainstorming.
-        </Text>
-
-        <View style={styles.footer}>
-          <Text style={styles.actionText}>Read full guide</Text>
-          <Ionicons name="chevron-forward" size={12} color="white" />
+          {/* Body */}
+          <Text style={styles.tipText}>
+            Your {phase} energy is rising. Perfect for focused work,
+            movement, and creative thinking.
+          </Text>
         </View>
       </BlurView>
     </View>
@@ -93,72 +87,66 @@ export function TipsSuggester({ phase, currentDay }: TipsSuggesterProps) {
 }
 
 const styles = StyleSheet.create({
+  /* Push card DOWN from header */
   container: {
-    marginVertical: 15,
-    paddingHorizontal: 16,
-    width: '100%',
-    alignItems: 'center',
+    marginTop: 32,          // 🔑 MAIN FIX
+    marginBottom: 24,
+    alignItems: "center",
+    width: "100%",
   },
-  glow: {
-    position: 'absolute',
-    width: '60%',
-    height: 60,
-    borderRadius: 100,
-    opacity: 0.15,
-    top: 20,
+
+  /* Floating card */
+  card: {
+    width: "92%",           // Not full width = card feel
+    borderRadius: 22,
+    overflow: "hidden",
+
+    backgroundColor: "rgba(15, 23, 42, 0.55)",
+
+    /* Real elevation */
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 12,
   },
-  glassCard: {
-    width: '100%',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+
+  content: {
+    padding: 18,
   },
+
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
   },
+
   iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
-  textColumn: {
-    flex: 1,
-  },
+
   tag: {
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 2,
+    fontWeight: "800",
+    letterSpacing: 1.2,
   },
-  title: {
+
+  day: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#FFF',
+    fontWeight: "800",
+    color: "#fff",
+    marginTop: 2,
   },
+
   tipText: {
     fontSize: 14,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
+    lineHeight: 20,
+    color: "rgba(255,255,255,0.75)",
+    fontWeight: "500",
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 18,
-    opacity: 0.7,
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginRight: 4,
-    color: '#FFF',
-  }
 });

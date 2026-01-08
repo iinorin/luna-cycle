@@ -1,177 +1,173 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useRef } from "react";
+import {
+  Animated,
+  Dimensions,
+  PanResponder,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
-// 1. TYPE DEFINITIONS (Fixes TypeScript "Implicit Any" errors)
-type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'safe';
+import { CompanionMessage } from "@/src/components/CompanionMessage";
+import { CycleRing } from "@/src/components/CycleRing";
+import { HeaderCard } from "@/src/components/HeaderCard";
+import { TipsSuggester } from "@/src/components/TipsSuggester";
+import BleedingRow from "@/src/features/bleeding/components/BleedingRow";
 
-interface ThemeConfig {
-  colors: string[];
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}
+import {
+  DEFAULT_CYCLE_STATE,
+  getCurrentCycleDay,
+  getPhaseForDay,
+} from "@/src/cycle/state";
 
-interface TipsSuggesterProps {
-  phase: CyclePhase;
-  currentDay: number;
-}
+const HEADER_HEIGHT = 140;
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const COLLAPSED_Y = HEADER_HEIGHT * 0.65;
+const EXPANDED_Y = HEADER_HEIGHT + 12;
+const SHEET_TOP = HEADER_HEIGHT;
+const TRANSLATED_COLLAPSED = 0;
+const TRANSLATED_EXPANDED = EXPANDED_Y - SHEET_TOP;
 
-const { width } = Dimensions.get('window');
+// FIX: Added 'export default' so Expo Router can render the screen
+export default function HomeScreen() {
+  const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
+  const periodLength = DEFAULT_CYCLE_STATE.periodLength;
 
-// 2. THEME CONFIGURATION (Centralized UI logic)
-const PHASE_THEMES: Record<CyclePhase, ThemeConfig> = {
-  menstrual: { colors: ['#F472B6', '#9D174D'], icon: 'water-outline', label: 'Self-Care' },
-  follicular: { colors: ['#5EEAD4', '#0D9488'], icon: 'flash-outline', label: 'Energy' },
-  ovulation: { colors: ['#FBBF24', '#B45309'], icon: 'heart-outline', label: 'Social' },
-  luteal: { colors: ['#A78BFA', '#5B21B6'], icon: 'moon-outline', label: 'Rest' },
-  safe: { colors: ['#38BDF8', '#0369A1'], icon: 'shield-checkmark-outline', label: 'Stable' },
-};
+  const currentDay = getCurrentCycleDay(DEFAULT_CYCLE_STATE);
+  const currentPhase = getPhaseForDay(currentDay, periodLength);
 
-export function TipsSuggester({ phase, currentDay }: TipsSuggesterProps) {
-  const theme = PHASE_THEMES[phase] || PHASE_THEMES.luteal;
-  
-  // 3. ANIMATION LOGIC (Breathing Pulse Effect)
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const lastTranslateY = useRef(TRANSLATED_EXPANDED);
+  const translateY = useRef(new Animated.Value(TRANSLATED_EXPANDED)).current;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.15,
-          duration: 3000,
-          easing: Easing.inOut(Easing.sin),
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 10,
+      onPanResponderMove: (_, g) => {
+        let nextPos = lastTranslateY.current + g.dy;
+        if (nextPos < TRANSLATED_COLLAPSED) nextPos = TRANSLATED_COLLAPSED;
+        translateY.setValue(nextPos);
+      },
+      onPanResponderRelease: (_, g) => {
+        const shouldSnapUp = g.dy < -80;
+        const toValue = shouldSnapUp ? TRANSLATED_COLLAPSED : TRANSLATED_EXPANDED;
+
+        Animated.spring(translateY, {
+          toValue,
           useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 3000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
+          tension: 40,
+          friction: 8,
+        }).start(() => {
+          lastTranslateY.current = toValue;
+        });
+      },
+    })
+  ).current;
 
   return (
     <View style={styles.container}>
-      {/* 🌬️ BREATHING GLOW (Syncs with phase color) */}
-      <Animated.View 
+      {/* 🔒 FIXED HEADER */}
+      <View style={styles.header}>
+        <HeaderCard phase={currentPhase} translateY={translateY} />
+      </View>
+
+      {/* 🔽 DRAGGABLE SHEET */}
+      <Animated.View
         style={[
-          styles.glow, 
-          { backgroundColor: theme.colors[0], transform: [{ scale: pulseAnim }] }
-        ]} 
-      />
+          styles.sheet,
+          {
+            top: SHEET_TOP,
+            transform: [{ translateY }],
+          },
+        ]}
+      >
+        <View {...panResponder.panHandlers} style={styles.handleContainer}>
+          <View style={styles.handle} />
+        </View>
 
-      {/* 🧊 GLASS CARD CONTAINER */}
-      <BlurView intensity={25} tint="light" style={styles.glassCard}>
-        {/* Subtle Lens Flare Overlay */}
-        <LinearGradient
-          colors={['rgba(255,255,255,0.15)', 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        
-        <View style={styles.headerRow}>
-          <LinearGradient
-            colors={theme.colors}
-            style={styles.iconBox}
-          >
-            <Ionicons name={theme.icon} size={18} color="white" />
-          </LinearGradient>
-          
-          <View>
-            <Text style={[styles.tag, { color: theme.colors[0] }]}>
-              {theme.label.toUpperCase()}
-            </Text>
-            <Text style={styles.title}>Daily Insight • Day {currentDay}</Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* 🌸 UPDATED TIPS */}
+          <TipsSuggester
+            phase={currentPhase}
+            currentDay={currentDay}
+          />
+
+          {/* 🟣 CYCLE RING */}
+          <View style={styles.center}>
+            <CycleRing
+              cycleLength={cycleLength}
+              periodLength={periodLength}
+              currentDay={currentDay}
+            />
           </View>
-        </View>
 
-        <Text style={styles.tipText}>
-          Your {phase} phase is here! Focus on nourishing your body with warm meals and prioritizing extra rest today to maintain your glow.
-        </Text>
+          {/* 🧍‍♀️ COMPANION */}
+          <CompanionMessage
+            phase={currentPhase}
+            day={currentDay}
+          />
 
-        <View style={styles.footer}>
-          <Text style={styles.actionText}>Read full guide</Text>
-          <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.5)" />
-        </View>
-      </BlurView>
+          {/* 🩸 BLEEDING */}
+          <BleedingRow
+            day={currentDay}
+            isPeriodDay={currentDay <= periodLength}
+          />
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 15,
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: "#0F172A",
+  },
+  header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_HEIGHT,
+    zIndex: 1000,
+  },
+  sheet: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: SCREEN_HEIGHT,
+    backgroundColor: "#0F172A",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    zIndex: 10,
+    overflow: "hidden",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  handleContainer: {
+    width: "100%",
+    paddingTop: 12,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
+  handle: {
+    width: 44,
+    height: 5,
+    backgroundColor: "#475569",
+    borderRadius: 10,
+  },
+  scrollContent: {
+    paddingTop: 8,
     paddingHorizontal: 16,
-    width: '100%',
+    paddingBottom: EXPANDED_Y + 150,
   },
-  glow: {
-    position: 'absolute',
-    width: '70%',
-    height: 60,
-    borderRadius: 100,
-    opacity: 0.2,
-    top: 20,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 40,
-    elevation: 10,
+  center: {
+    alignItems: "center",
+    marginVertical: 16,
   },
-  glassCard: {
-    width: '100%',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  tag: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 1,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
-  },
-  tipText: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: '500',
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 18,
-    opacity: 0.6,
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginRight: 4,
-    color: '#FFFFFF',
-  }
 });
