@@ -12,16 +12,15 @@ import { useState, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import { StatusBar } from "expo-status-bar";
-import { useNavigation } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 import { painBodyParts } from "./painBodyParts";
 
 const { width } = Dimensions.get("window");
 
 export default function PainDetails() {
-  const navigation = useNavigation();
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [painLevel, setPainLevel] = useState(0);
 
@@ -45,7 +44,7 @@ export default function PainDetails() {
 
     setTimeout(() => {
       setShowSuccess(false);
-      navigation.navigate("Insights" as never);
+      router.replace("/insights"); // ✅ Expo Router navigation
     }, 2500);
   };
 
@@ -201,7 +200,7 @@ export default function PainDetails() {
 
           <Pressable
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()} // ✅ Safe
           >
             <Text style={styles.backButtonText}>Go Back</Text>
           </Pressable>
@@ -236,23 +235,32 @@ export default function PainDetails() {
               Thank you for checking in.
             </Text>
 
-            <View style={styles.loadingLineContainer}>
-              <Text style={styles.redirectText}>
-                Going back to insights...
-              </Text>
-            </View>
+            <Text style={styles.redirectText}>
+              Going back to insights...
+            </Text>
           </Animated.View>
         </View>
       </Modal>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0F172A" },
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
+  safe: {
+    flex: 1,
+    backgroundColor: "#0F172A",
+  },
 
-  headerSection: { alignItems: "center", marginBottom: 24 },
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
+
+  /* HEADER */
+  headerSection: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
   subHeading: {
     color: "#64748B",
     fontSize: 10,
@@ -260,7 +268,11 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 4,
   },
-  heading: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  heading: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#fff",
+  },
 
   indicatorContainer: {
     flexDirection: "row",
@@ -281,6 +293,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
 
+  /* GRID */
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -291,7 +304,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     alignItems: "center",
   },
-
   iconCircle: {
     width: 62,
     height: 62,
@@ -313,8 +325,11 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "600",
   },
-  labelSelected: { color: "#fff" },
+  labelSelected: {
+    color: "#fff",
+  },
 
+  /* METER */
   meterCard: {
     marginTop: "auto",
     backgroundColor: "#1E293B",
@@ -367,9 +382,14 @@ const styles = StyleSheet.create({
     marginTop: -25,
   },
 
-  disabledOpacity: { opacity: 0.2 },
+  disabledOpacity: {
+    opacity: 0.2,
+  },
 
-  buttonGroup: { marginBottom: 10 },
+  /* BUTTONS */
+  buttonGroup: {
+    marginBottom: 10,
+  },
   saveButton: {
     backgroundColor: "#fff",
     height: 58,
@@ -378,7 +398,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  saveButtonDisabled: { backgroundColor: "#334155" },
+  saveButtonDisabled: {
+    backgroundColor: "#334155",
+  },
   saveButtonText: {
     fontSize: 16,
     fontWeight: "800",
@@ -395,6 +417,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
 
+  /* SUCCESS MODAL */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -434,10 +457,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     marginBottom: 24,
-  },
-  loadingLineContainer: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   redirectText: {
     color: "#64748B",
