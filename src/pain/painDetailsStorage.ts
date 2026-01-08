@@ -6,6 +6,7 @@ const DETAILS_DATE_KEY = "pain_details_date";
 export type PainDetailsData = {
   bodyParts: string[];
   level: number;
+  updatedAt: string;
 };
 
 const today = () => new Date().toISOString().split("T")[0];
