@@ -22,13 +22,11 @@ import {
 
 const HEADER_HEIGHT = 140;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const COLLAPSED_Y = HEADER_HEIGHT * 0.65;
 const EXPANDED_Y = HEADER_HEIGHT + 12;
 const SHEET_TOP = HEADER_HEIGHT;
 const TRANSLATED_COLLAPSED = 0;
 const TRANSLATED_EXPANDED = EXPANDED_Y - SHEET_TOP;
 
-// FIX: Added 'export default' so Expo Router can render the screen
 export default function HomeScreen() {
   const cycleLength = DEFAULT_CYCLE_STATE.cycleLength;
   const periodLength = DEFAULT_CYCLE_STATE.periodLength;
@@ -49,7 +47,9 @@ export default function HomeScreen() {
       },
       onPanResponderRelease: (_, g) => {
         const shouldSnapUp = g.dy < -80;
-        const toValue = shouldSnapUp ? TRANSLATED_COLLAPSED : TRANSLATED_EXPANDED;
+        const toValue = shouldSnapUp
+          ? TRANSLATED_COLLAPSED
+          : TRANSLATED_EXPANDED;
 
         Animated.spring(translateY, {
           toValue,
@@ -88,11 +88,8 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* 🌸 UPDATED TIPS */}
-          <TipsSuggester
-            phase={currentPhase}
-            currentDay={currentDay}
-          />
+          {/* 🌸 TIPS */}
+          <TipsSuggester phase={currentPhase} currentDay={currentDay} />
 
           {/* 🟣 CYCLE RING */}
           <View style={styles.center}>
@@ -104,10 +101,7 @@ export default function HomeScreen() {
           </View>
 
           {/* 🧍‍♀️ COMPANION */}
-          <CompanionMessage
-            phase={currentPhase}
-            day={currentDay}
-          />
+          <CompanionMessage phase={currentPhase} day={currentDay} />
 
           {/* 🩸 BLEEDING */}
           <BleedingRow
@@ -151,23 +145,23 @@ const styles = StyleSheet.create({
   },
   handleContainer: {
     width: "100%",
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
     alignItems: "center",
   },
   handle: {
-    width: 44,
+    width: 40,
     height: 5,
     backgroundColor: "#475569",
     borderRadius: 10,
   },
   scrollContent: {
-    paddingTop: 8,
-    paddingHorizontal: 16,
-    paddingBottom: EXPANDED_Y + 150,
+    paddingTop: 4,
+    paddingHorizontal: 14,
+    paddingBottom: EXPANDED_Y + 100,
   },
   center: {
     alignItems: "center",
-    marginVertical: 16,
+    marginVertical: 10,
   },
 });
