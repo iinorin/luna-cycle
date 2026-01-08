@@ -6,13 +6,17 @@ import {
   Animated,
   Image,
 } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle2, AlertTriangle, Trash2 } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
-import { loadTodayPain } from "./painDailyStorage";
-import { savePainForToday, clearPainData, PainSelection } from "./painDailyStorage";
+import {
+  loadTodayPain,
+  savePainForToday,
+  clearPainData,
+  PainSelection,
+} from "./painDailyStorage";
 
 export default function PainScreen() {
   const router = useRouter();
@@ -25,8 +29,7 @@ export default function PainScreen() {
   const scalePain = useRef(new Animated.Value(1)).current;
 
   /**
-   * 🔁 HYDRATE TODAY'S STATE
-   * Runs once when screen opens (drawer click, app reopen, etc.)
+   * 🧠 INITIAL HYDRATION (runs ONCE)
    */
   useEffect(() => {
     (async () => {
@@ -35,17 +38,36 @@ export default function PainScreen() {
       if (value) {
         setSelected(value);
         setSaved(true);
-
-        // ✅ If pain was already selected today → go straight to details
-        if (value === "pain") {
-          router.replace("/pain/details");
-          return;
-        }
       }
 
       setHydrated(true);
     })();
   }, []);
+
+  /**
+   * 🔁 FOCUS-BASED REDIRECT (drawer / tab / back)
+   */
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      const checkRedirect = async () => {
+        const value = await loadTodayPain();
+
+        if (!active) return;
+
+        if (value === "pain") {
+          router.replace("/pain/details");
+        }
+      };
+
+      checkRedirect();
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
 
   const animatePress = (scale: Animated.Value) => {
     Animated.sequence([
@@ -87,9 +109,9 @@ export default function PainScreen() {
 
   const isSaveEnabled = selected !== null && !saved;
 
-  // ⛔ Prevent flicker before hydration
+  // ⛔ Prevent UI flicker before hydration
   if (!hydrated) {
-    return <View style={{ flex: 1, backgroundColor: "#000" }} />;
+    return <View style={{ flex: 1, backgroundColor: "#000000" }} />;
   }
 
   return (
@@ -219,6 +241,7 @@ export default function PainScreen() {
   );
 }
 
+/* ---------------- STYLES (UNCHANGED) ---------------- */
 
 const styles = StyleSheet.create({
   container: {
@@ -226,32 +249,27 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#000000",
   },
-
   headerCard: {
     borderRadius: 20,
     padding: 20,
     marginBottom: 40,
     marginTop: 70,
   },
-
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: "#ffffff",
   },
-
   headerSubtitle: {
     marginTop: 6,
     fontSize: 14,
     color: "#9ca3af",
   },
-
   iconRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
     marginBottom: 50,
   },
-
   iconWrapper: {
     width: 140,
     height: 140,
@@ -260,34 +278,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   iconLabel: {
     marginTop: 12,
     fontSize: 15,
     fontWeight: "600",
     color: "#9ca3af",
   },
-
   activeNoPain: {
     backgroundColor: "#052e16",
     borderWidth: 1,
     borderColor: "#22c55e",
   },
-
   activePain: {
     backgroundColor: "#450a0a",
     borderWidth: 1,
     borderColor: "#ef4444",
   },
-
   activeLabel: {
     color: "#ffffff",
   },
-
   locked: {
     opacity: 0.5,
   },
-
   saveButton: {
     height: 52,
     borderRadius: 14,
@@ -295,21 +307,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
-
   saveActive: {
     backgroundColor: "#ec4899",
   },
-
   saveDisabled: {
     backgroundColor: "#1f2937",
   },
-
   saveText: {
     fontSize: 16,
     fontWeight: "700",
     color: "#ffffff",
   },
-
   deleteButton: {
     marginTop: 16,
     flexDirection: "row",
@@ -317,34 +325,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-
   deleteText: {
     fontSize: 14,
     color: "#f87171",
     fontWeight: "600",
   },
-
   noPainContainer: {
     marginTop: 30,
     alignItems: "center",
   },
-
   noPainTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-
   noPainTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#ffffff",
   },
-
   noPainEmoji: {
     fontSize: 20,
   },
-
   noPainSubtitle: {
     fontSize: 14,
     color: "#9ca3af",
@@ -352,7 +354,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 20,
   },
-
   noPainGif: {
     width: 200,
     height: 200,
