@@ -28,6 +28,16 @@ import {
   getMonthlyBarValue,
 } from "@/src/features/bleeding/utils";
 
+import { getAllPainEntries } from "@/src/pain/painDetailsStorage";
+
+import {
+  getPainIntensityTimeline,
+  getPainBodyPartCounts,
+  getPainIntensityBuckets,
+  getAveragePainIntensity,
+} from "@/src/pain/utils";
+
+
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -70,6 +80,9 @@ export default function InsightsScreen() {
       duration: 900,
       useNativeDriver: false,
     }).start();
+
+    const pain = await getAllPainEntries();
+    setPainStore(pain);
   }
 
   if (!cycle || !cycleInfo) {
@@ -104,16 +117,16 @@ export default function InsightsScreen() {
 
   const lutealStartDay = cycle.cycleLength - 6; // last 7 days
 
-const currentPhase =
-  cycleInfo.cycleDay <= cycle.periodDuration
-    ? "🌸 Menstrual Phase — Rest & recharge"
-    : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
-      ? "🌱 Follicular Phase — Energy rising"
-      : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
-        ? "🔥 Ovulation Phase — Peak confidence"
-        : cycleInfo.cycleDay < lutealStartDay
-          ? "🛡️ Safe Phase — Calm & balanced"
-          : "🌙 Luteal Phase — Slow & reflect";
+  const currentPhase =
+    cycleInfo.cycleDay <= cycle.periodDuration
+      ? "🌸 Menstrual Phase — Rest & recharge"
+      : cycleInfo.cycleDay < cycleInfo.fertileWindow.startDay
+        ? "🌱 Follicular Phase — Energy rising"
+        : cycleInfo.cycleDay <= cycleInfo.fertileWindow.endDay
+          ? "🔥 Ovulation Phase — Peak confidence"
+          : cycleInfo.cycleDay < lutealStartDay
+            ? "🛡️ Safe Phase — Calm & balanced"
+            : "🌙 Luteal Phase — Slow & reflect";
 
 
   /* =========================
@@ -136,6 +149,15 @@ const currentPhase =
   const barScores = months.map((m) =>
     getMonthlyBarValue(bleedingStore[m])
   );
+
+  const [painStore, setPainStore] = useState<any>({});
+  const hasPainData = Object.keys(painStore).length > 0;
+
+  const painTimeline = getPainIntensityTimeline(painStore);
+  const painBodyCounts = getPainBodyPartCounts(painStore);
+  const painBuckets = getPainIntensityBuckets(painStore);
+  const avgPain = getAveragePainIntensity(painStore);
+
 
   return (
     <ScrollView
