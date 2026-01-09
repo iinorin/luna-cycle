@@ -1,36 +1,32 @@
 /* =========================
-   🩹 Pain Utilities
+   🩹 Pain Insights Utilities
+   Works with painDetailsStorage.ts
    ========================= */
 
-/**
- * Pain entry shape (expected)
- * date: YYYY-MM-DD
- * intensity: 0–10
- * areas: body parts where pain occurred
- */
-export type PainEntry = {
-  date: string;
-  intensity: number;
-  areas: string[];
+export type PainDetailsEntry = {
+  bodyParts: string[];
+  level: number; // 0–10
+  updatedAt?: string;
 };
 
 /**
  * Pain store shape
- * Keyed by date
+ * {
+ *   "YYYY-MM-DD": PainDetailsEntry
+ * }
  */
-export type PainStore = Record<string, PainEntry>;
+export type PainStore = Record<string, PainDetailsEntry>;
 
 /* ----------------------------------
    1️⃣ Pain Intensity Over Time
 ----------------------------------- */
 export function getPainIntensityTimeline(store: PainStore) {
-  const entries = Object.values(store || {}).sort((a, b) =>
-    a.date.localeCompare(b.date)
-  );
+  const entries = Object.entries(store || {})
+    .sort(([a], [b]) => a.localeCompare(b));
 
   return {
-    labels: entries.map((e) => e.date.slice(5)), // MM-DD for chart
-    values: entries.map((e) => e.intensity ?? 0),
+    labels: entries.map(([date]) => date.slice(5)), // MM-DD
+    values: entries.map(([, entry]) => entry.level ?? 0),
   };
 }
 
@@ -41,8 +37,8 @@ export function getPainBodyPartCounts(store: PainStore) {
   const counts: Record<string, number> = {};
 
   Object.values(store || {}).forEach((entry) => {
-    (entry.areas || []).forEach((area) => {
-      counts[area] = (counts[area] || 0) + 1;
+    (entry.bodyParts || []).forEach((part) => {
+      counts[part] = (counts[part] || 0) + 1;
     });
   });
 
@@ -54,7 +50,7 @@ export function getPainBodyPartCounts(store: PainStore) {
 ----------------------------------- */
 /**
  * Buckets:
- * 0 → None
+ * 0 → None (0)
  * 1 → Mild (1–3)
  * 2 → Moderate (4–6)
  * 3 → Severe (7–10)
@@ -63,11 +59,11 @@ export function getPainIntensityBuckets(store: PainStore) {
   const buckets = [0, 0, 0, 0];
 
   Object.values(store || {}).forEach((entry) => {
-    const intensity = entry.intensity ?? 0;
+    const level = entry.level ?? 0;
 
-    if (intensity === 0) buckets[0]++;
-    else if (intensity <= 3) buckets[1]++;
-    else if (intensity <= 6) buckets[2]++;
+    if (level === 0) buckets[0]++;
+    else if (level <= 3) buckets[1]++;
+    else if (level <= 6) buckets[2]++;
     else buckets[3]++;
   });
 
@@ -80,8 +76,8 @@ export function getPainIntensityBuckets(store: PainStore) {
 export function getMonthlyPainCount(store: PainStore) {
   const months: Record<string, number> = {};
 
-  Object.values(store || {}).forEach((entry) => {
-    const month = entry.date.slice(0, 7); // YYYY-MM
+  Object.keys(store || {}).forEach((date) => {
+    const month = date.slice(0, 7); // YYYY-MM
     months[month] = (months[month] || 0) + 1;
   });
 
@@ -96,7 +92,7 @@ export function getAveragePainIntensity(store: PainStore) {
   if (!entries.length) return 0;
 
   const total = entries.reduce(
-    (sum, e) => sum + (e.intensity ?? 0),
+    (sum, e) => sum + (e.level ?? 0),
     0
   );
 
