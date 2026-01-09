@@ -322,6 +322,99 @@ export default function InsightsScreen() {
             No monthly bleeding data yet
           </Text>
         )}
+
+        {/* ===== 🩹 PAIN INSIGHTS (ADDED, NOTHING REMOVED) ===== */}
+
+        <Text style={styles.sectionTitle}>🩹 Pain Insights</Text>
+
+        {/* Pain Intensity Over Time */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Pain Intensity Over Time</Text>
+
+          {hasPainData ? (
+            <LineChart
+              data={{
+                labels: painTimeline.labels,
+                datasets: [{ data: painTimeline.values }],
+              }}
+              width={screenWidth - 48}
+              height={220}
+              bezier
+              chartConfig={{
+                backgroundGradientFrom: "#fff1f2",
+                backgroundGradientTo: "#ffe4e6",
+                decimalPlaces: 0,
+                color: (o = 1) => `rgba(225, 29, 72, ${o})`,
+                labelColor: () => "#7f1d1d",
+                propsForDots: {
+                  r: "4",
+                  strokeWidth: "2",
+                  stroke: "#e11d48",
+                },
+              }}
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <Text style={styles.emptyText}>No pain data recorded yet</Text>
+          )}
+        </View>
+
+        {/* Pain by Body Area */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Pain by Body Area</Text>
+
+          {hasPainData ? (
+            <BarChart
+              data={{
+                labels: Object.keys(painBodyCounts),
+                datasets: [{ data: Object.values(painBodyCounts) }],
+              }}
+              width={screenWidth - 48}
+              height={220}
+              chartConfig={{
+                backgroundGradientFrom: "#0F172A",
+                backgroundGradientTo: "#020617",
+                decimalPlaces: 0,
+                color: (o = 1) => `rgba(248, 113, 113, ${o})`,
+                labelColor: () => "#E5E7EB",
+              }}
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <Text style={styles.emptyText}>No pain areas logged</Text>
+          )}
+        </View>
+
+        {/* Pain Severity Distribution */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Pain Severity Distribution</Text>
+
+          {hasPainData ? (
+            <PieChart
+              data={[
+                { name: "None", population: painBuckets[0], color: "#e5e7eb" },
+                { name: "Mild", population: painBuckets[1], color: "#fecaca" },
+                { name: "Moderate", population: painBuckets[2], color: "#f87171" },
+                { name: "Severe", population: painBuckets[3], color: "#b91c1c" },
+              ].filter((d) => d.population > 0)}
+              width={screenWidth - 48}
+              height={220}
+              accessor="population"
+              backgroundColor="transparent"
+              chartConfig={{ color: () => "#000" }}
+              paddingLeft="15"
+            />
+          ) : (
+            <Text style={styles.emptyText}>No pain severity data</Text>
+          )}
+        </View>
+
+        {/* Average Pain */}
+        <View style={[styles.card, styles.softCard]}>
+          <Text style={styles.cardTitle}>Average Pain Level</Text>
+          <Text style={styles.value}>{avgPain} / 10</Text>
+        </View>
+
       </View>
     </ScrollView>
   );
