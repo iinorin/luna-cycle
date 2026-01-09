@@ -75,6 +75,7 @@ export default function InsightsScreen() {
     setCycle(data);
     setCycleInfo(info);
     setBleedingStore(bleeding);
+    setPainStore(pain);
 
     progressAnim.setValue(0);
     Animated.timing(progressAnim, {
@@ -83,7 +84,6 @@ export default function InsightsScreen() {
       useNativeDriver: false,
     }).start();
 
-    setPainStore(pain);
   }
 
   if (!cycle || !cycleInfo) {
