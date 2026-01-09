@@ -61,6 +61,7 @@ export default function InsightsScreen() {
   async function load() {
     const data = await getCycleData();
     const bleeding = await getBleedingStore();
+    const pain = await getAllPainEntries();
 
     console.log("🩸 Bleeding data loaded in Insights:", bleeding);
 
@@ -82,7 +83,6 @@ export default function InsightsScreen() {
       useNativeDriver: false,
     }).start();
 
-    const pain = await getAllPainEntries();
     setPainStore(pain);
   }
 
