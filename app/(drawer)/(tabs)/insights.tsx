@@ -371,6 +371,9 @@ export default function InsightsScreen() {
               }}
               width={screenWidth - 48}
               height={220}
+              yAxisLabel=""
+              yAxisSuffix=""
+
               chartConfig={{
                 backgroundGradientFrom: "#0F172A",
                 backgroundGradientTo: "#020617",
