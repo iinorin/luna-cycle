@@ -45,6 +45,7 @@ export default function InsightsScreen() {
   const [cycle, setCycle] = useState<CycleData | null>(null);
   const [cycleInfo, setCycleInfo] = useState<any>(null);
   const [bleedingStore, setBleedingStore] = useState<any>({});
+  const [painStore, setPainStore] = useState<any>({});
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -150,7 +151,6 @@ export default function InsightsScreen() {
     getMonthlyBarValue(bleedingStore[m])
   );
 
-  const [painStore, setPainStore] = useState<any>({});
   const hasPainData = Object.keys(painStore).length > 0;
 
   const painTimeline = getPainIntensityTimeline(painStore);
