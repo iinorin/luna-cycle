@@ -1,35 +1,71 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const DETAILS_KEY = "pain_details";
-const DETAILS_DATE_KEY = "pain_details_date";
+const PAIN_DETAILS_KEY = "pain_details_store";
 
-export type PainDetailsData = {
+/**
+ * Shape of a pain entry saved per day
+ */
+export type PainDetailsEntry = {
   bodyParts: string[];
-  level: number;
-  updatedAt: string;
+  level: number; // 0–10
+  updatedAt?: string;
 };
 
-const today = () => new Date().toISOString().split("T")[0];
+/**
+ * Get today's date (YYYY-MM-DD)
+ */
+const getTodayDate = (): string => {
+  return new Date().toISOString().split("T")[0];
+};
 
-export async function savePainDetails(data: PainDetailsData) {
-  await AsyncStorage.multiSet([
-    [DETAILS_DATE_KEY, today()],
-    [DETAILS_KEY, JSON.stringify(data)],
-  ]);
-}
 
-export async function loadTodayPainDetails(): Promise<PainDetailsData | null> {
-  const [[, date], [, raw]] = await AsyncStorage.multiGet([
-    DETAILS_DATE_KEY,
-    DETAILS_KEY,
-  ]);
+/**
+ * Load today's pain details
+ */
+export const loadTodayPainDetails = async (): Promise<PainDetailsEntry | null> => {
+  const today = getTodayDate();
+  const raw = await AsyncStorage.getItem(PAIN_DETAILS_KEY);
+  if (!raw) return null;
 
-  if (date === today() && raw) {
-    return JSON.parse(raw);
-  }
-  return null;
-}
+  const store = JSON.parse(raw);
+  return store[today] || null;
+};
 
-export async function clearPainDetails() {
-  await AsyncStorage.multiRemove([DETAILS_KEY, DETAILS_DATE_KEY]);
-}
+/**
+ * Save today's pain details
+ */
+export const savePainDetails = async (
+  entry: PainDetailsEntry
+): Promise<void> => {
+  const today = getTodayDate();
+  const raw = await AsyncStorage.getItem(PAIN_DETAILS_KEY);
+  const store = raw ? JSON.parse(raw) : {};
+
+  store[today] = {
+    ...entry,
+    updatedAt: entry.updatedAt || new Date().toLocaleTimeString(),
+  };
+
+  await AsyncStorage.setItem(PAIN_DETAILS_KEY, JSON.stringify(store));
+};
+
+/* =========================
+   🔥 NEW: INSIGHTS SUPPORT
+   ========================= */
+
+/**
+ * Get ALL pain entries (for Insights & analytics)
+ */
+export const getAllPainEntries = async (): Promise<
+  Record<string, PainDetailsEntry>
+> => {
+  const raw = await AsyncStorage.getItem(PAIN_DETAILS_KEY);
+  return raw ? JSON.parse(raw) : {};
+};
+
+/**
+ * Clear all pain history (optional utility)
+ */
+export const clearAllPainDetails = async (): Promise<void> => {
+  await AsyncStorage.removeItem(PAIN_DETAILS_KEY);
+};
