@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 export type MoodType = {
   id: string;
   label: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string
   color: string;
 };
 
