@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,44 +6,56 @@ import {
   Pressable,
   FlatList,
   Dimensions,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 import { MOODS, MoodType } from "@/src/mood/moodTypes";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const ITEM_SIZE = (SCREEN_WIDTH - 32 - 16) / 5;
+const { width } = Dimensions.get("window");
+// 4 columns feels more premium than 5
+const COLUMN_COUNT = 4;
+const ITEM_SIZE = (width - 32 - (COLUMN_COUNT - 1) * 12) / COLUMN_COUNT;
 
 export default function MoodGrid() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
 
+const handleSelect = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedMood(id); 
+  };
+
   const renderItem = ({ item }: { item: MoodType }) => {
     const active = selectedMood === item.id;
-
+    
     return (
       <Pressable
-        onPress={() => setSelectedMood(item.id)}
-        style={[
+        onPress={() => handleSelect(item.id)}
+        style={({ pressed }) => [
           styles.moodItem,
           {
             width: ITEM_SIZE,
-            height: ITEM_SIZE,
-            borderColor: active ? item.color : "transparent",
-            backgroundColor: active
-              ? item.color + "22"
-              : "#f9fafb",
+            height: ITEM_SIZE + 10,
+            borderColor: active ? item.color : "rgba(255,255,255,0.05)",
+            backgroundColor: active ? `${item.color}15` : "#1E293B",
+            transform: [{ scale: pressed ? 0.95 : 1 }],
           },
+          active && styles.activeShadow,
+          active && { shadowColor: item.color }
         ]}
       >
-        <Ionicons
-          name={item.icon}
-          size={24}
-          color={active ? item.color : "#9ca3af"}
-        />
+        <View style={[styles.iconContainer, active && { backgroundColor: `${item.color}20` }]}>
+          <Ionicons
+            name={item.icon as any}
+            size={28}
+            color={active ? item.color : "#64748B"}
+          />
+        </View>
         <Text
           style={[
             styles.label,
-            active && { color: item.color, fontWeight: "700" },
+            active && { color: "#fff", fontWeight: "800" },
           ]}
           numberOfLines={1}
         >
@@ -55,13 +67,16 @@ export default function MoodGrid() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>How are you feeling?</Text>
+      <View style={styles.header}>
+        <Text style={styles.subHeading}>DAILY CHECK-IN</Text>
+        <Text style={styles.title}>How are you feeling?</Text>
+      </View>
 
       <FlatList
         data={MOODS}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        numColumns={5}
+        numColumns={COLUMN_COUNT}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator={false}
@@ -69,42 +84,63 @@ export default function MoodGrid() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 60,
+    backgroundColor: "#0F172A", // Luna Deep Blue
+    paddingTop: 40,
     paddingHorizontal: 16,
   },
-
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-    color: "#111827",
+  header: {
+    marginBottom: 24,
+    alignItems: 'center',
   },
-
+  subHeading: {
+    color: "#64748B",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#fff",
+  },
   grid: {
     paddingBottom: 40,
   },
-
   row: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    gap: 12,
     marginBottom: 12,
   },
-
   moodItem: {
-    borderRadius: 14,
+    borderRadius: 20,
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
-    padding: 6,
+    padding: 8,
   },
-
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  activeShadow: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
   label: {
-    fontSize: 10,
-    marginTop: 4,
-    color: "#6b7280",
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "600",
     textAlign: "center",
   },
 });

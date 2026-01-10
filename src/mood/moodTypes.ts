@@ -17,7 +17,7 @@ export const MOODS: MoodType[] = [
   { id: "horny", label: "Horny", icon: "heart-circle-outline", color: "#f43f5e" },
 
   { id: "good", label: "Good", icon: "thumbs-up-outline", color: "#3b82f6" },
-  { id: "smug", label: "Smug", icon: "happy-outline", color: "#6366f1" }, // ← fixed
+  { id: "smug", label: "Smug", icon: "happy-outline", color: "#6366f1" },
   { id: "proud", label: "Proud", icon: "trophy-outline", color: "#a855f7" },
   { id: "silly", label: "Silly", icon: "happy-outline", color: "#10b981" },
 
