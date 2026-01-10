@@ -7,10 +7,12 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { BlurView } from "expo-blur";
 
 import { MOODS, MoodType } from "@/src/mood/moodTypes";
 
@@ -21,14 +23,19 @@ const ITEM_SIZE = (width - 32 - (COLUMN_COUNT - 1) * 16) / COLUMN_COUNT;
 export default function MoodGrid() {
   const router = useRouter();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   // Animation Refs
   const buttonFade = useRef(new Animated.Value(0)).current;
   const buttonSlide = useRef(new Animated.Value(20)).current;
   const fadeAnims = useRef(MOODS.map(() => new Animated.Value(0))).current;
+  
+  // Success Animation Refs
+  const successScale = useRef(new Animated.Value(0.7)).current;
+  const successOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Staggered entry animation
+    // Staggered entry animation for the grid items
     const animations = fadeAnims.map((anim, i) =>
       Animated.spring(anim, {
         toValue: 1,
@@ -57,6 +64,23 @@ export default function MoodGrid() {
     setSelectedMood(null);
     // Hide save button
     Animated.timing(buttonFade, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+  };
+
+  const handleSave = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowSuccess(true);
+
+    // Play success popup animation
+    Animated.parallel([
+      Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.spring(successScale, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
+    ]).start();
+
+    // Wait 2 seconds, then navigate home
+    setTimeout(() => {
+      setShowSuccess(false);
+      router.replace("/cycle");
+    }, 2000);
   };
 
   const selectedMoodData = MOODS.find(m => m.id === selectedMood);
@@ -122,8 +146,8 @@ export default function MoodGrid() {
                 onPress={handleReset} 
                 style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}
             >
-              <Ionicons name="refresh-outline" size={22} color="#94A3B8" />
-              <Text style={styles.actionText}>Reset Selection</Text>
+              <Ionicons name="refresh-outline" size={20} color="#94A3B8" />
+              <Text style={styles.actionText}>Reset</Text>
             </Pressable>
 
             <View style={styles.divider} />
@@ -132,8 +156,8 @@ export default function MoodGrid() {
                 onPress={() => router.replace("/cycle")} 
                 style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}
             >
-              <Ionicons name="home-outline" size={22} color="#94A3B8" />
-              <Text style={styles.actionText}>Go Home</Text>
+              <Ionicons name="home-outline" size={20} color="#94A3B8" />
+              <Text style={styles.actionText}>Home</Text>
             </Pressable>
           </View>
         }
@@ -146,7 +170,7 @@ export default function MoodGrid() {
           { opacity: buttonFade, transform: [{ translateY: buttonSlide }] }
         ]}>
           <Pressable 
-            onPress={() => console.log("Saved", selectedMood)}
+            onPress={handleSave}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: selectedMoodData?.color, transform: [{ scale: pressed ? 0.96 : 1 }] },
@@ -157,6 +181,25 @@ export default function MoodGrid() {
           </Pressable>
         </Animated.View>
       )}
+
+      {/* 🌟 SUCCESS ANIMATION OVERLAY */}
+      <Modal transparent visible={showSuccess} animationType="none">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+          <Animated.View style={[
+            styles.successCard,
+            { opacity: successOpacity, transform: [{ scale: successScale }], borderColor: selectedMoodData?.color }
+          ]}>
+             <View style={[styles.checkCircle, { backgroundColor: selectedMoodData?.color }]}>
+                <Ionicons name="checkmark-sharp" size={40} color="#fff" />
+             </View>
+             <Text style={styles.successTitle}>Saved!</Text>
+             <Text style={styles.successText}>
+               Your {selectedMoodData?.label.toLowerCase()} mood is logged.
+             </Text>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -192,26 +235,25 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 12, color: "#94A3B8", fontWeight: "700" },
 
-  // ACTION BAR STYLES
   actionBar: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
     backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    padding: 16,
+    padding: 14,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
   actionText: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginLeft: 8 },
-  divider: { width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 10 },
+  divider: { width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 5 },
 
   buttonContainer: { position: 'absolute', bottom: 34, left: 16, right: 16 },
   saveButton: {
     height: 60,
-    borderRadius: 20,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 8 },
@@ -220,4 +262,43 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   saveButtonText: { color: "#fff", fontSize: 17, fontWeight: "900" },
+
+  // Success Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  successCard: {
+    width: width * 0.75,
+    backgroundColor: '#1E293B',
+    borderRadius: 32,
+    padding: 30,
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+  },
+  checkCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  successText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    textAlign: 'center',
+    fontWeight: '500',
+  }
 });
