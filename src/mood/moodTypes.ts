@@ -11,23 +11,28 @@ export type MoodType = {
 };
 
 export const MOODS: MoodType[] = [
-  { id: "happy", label: "Happy", icon: "happy-outline", color: "#22c55e" },
-  { id: "playful", label: "Playful", icon: "sparkles-outline", color: "#f59e0b" },
-  { id: "sexy", label: "Sexy", icon: "heart-outline", color: "#ec4899" },
-  { id: "horny", label: "Horny", icon: "heart-circle-outline", color: "#f43f5e" },
+  // POSITIVE & HIGH ENERGY
+  { id: "happy", label: "Happy", icon: "sunny-outline", color: "#4ADE80" }, 
+  { id: "playful", label: "Playful", icon: "sparkles-outline", color: "#FBBF24" }, 
+  { id: "sexy", label: "Sexy", icon: "heart-outline", color: "#FB7185" }, 
+  { id: "horny", label: "Spicy", icon: "flame-outline", color: "#F472B6" }, 
 
-  { id: "good", label: "Good", icon: "thumbs-up-outline", color: "#3b82f6" },
-  { id: "smug", label: "Smug", icon: "happy-outline", color: "#6366f1" },
-  { id: "proud", label: "Proud", icon: "trophy-outline", color: "#a855f7" },
-  { id: "silly", label: "Silly", icon: "happy-outline", color: "#10b981" },
+  // CONFIDENT & CHILL
+  { id: "good", label: "Good", icon: "checkmark-circle-outline", color: "#38BDF8" }, 
+  { id: "smug", label: "Smug", icon: "glasses-outline", color: "#A78BFA" }, 
+  { id: "proud", label: "Proud", icon: "ribbon-outline", color: "#2DD4BF" }, 
+  { id: "silly", label: "Silly", icon: "happy-outline", color: "#FCD34D" }, 
 
-  { id: "sad", label: "Sad", icon: "sad-outline", color: "#60a5fa" },
-  { id: "angry", label: "Angry", icon: "flame-outline", color: "#ef4444" },
+  // LOW ENERGY / NEGATIVE
+  { id: "sad", label: "Sad", icon: "rainy-outline", color: "#60A5FA" }, 
+  { id: "angry", label: "Angry", icon: "thunderstorm-outline", color: "#EF4444" }, 
 
-  { id: "ashamed", label: "Ashamed", icon: "sad-outline", color: "#64748b" },
-  { id: "tormented", label: "Tormented", icon: "alert-circle-outline", color: "#b91c1c" },
-  { id: "unsafe", label: "Unsafe", icon: "warning-outline", color: "#dc2626" },
+  // VULNERABLE
+  { id: "ashamed", label: "Down", icon: "cloud-outline", color: "#94A3B8" }, 
+  { id: "tormented", label: "Stressed", icon: "pulse-outline", color: "#FB923C" }, 
+  { id: "unsafe", label: "Unsafe", icon: "shield-outline", color: "#F87171" }, 
 
-  { id: "bored", label: "Bored", icon: "remove-circle-outline", color: "#94a3b8" },
-  { id: "curious", label: "Curious", icon: "help-circle-outline", color: "#38bdf8" },
+  // NEUTRAL / OTHERS
+  { id: "bored", label: "Bored", icon: "ellipse-outline", color: "#64748B" }, 
+  { id: "curious", label: "Curious", icon: "help-circle-outline", color: "#22D3EE" }, 
 ];
