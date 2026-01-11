@@ -80,7 +80,7 @@ export default function HomeScreen() {
           },
         ]}
       >
-        <View {...panResponder.panHandlers} style={styles.handleContainer}>
+        <View  style={styles.handleContainer}>
           <View style={styles.handle} />
         </View>
 
