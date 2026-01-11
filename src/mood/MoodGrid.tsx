@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { BlurView } from "expo-blur";
 
 import { MOODS, MoodType } from "@/src/mood/moodTypes";
+import { MoodStorage } from "@/src/mood/moodStorage"; // ✅ Import your helper
 
 const { width } = Dimensions.get("window");
 const COLUMN_COUNT = 3;
@@ -24,35 +25,45 @@ export default function MoodGrid() {
   const router = useRouter();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+  const [isAlreadyLogged, setIsAlreadyLogged] = useState(false);
+
   // Animation Refs
   const buttonFade = useRef(new Animated.Value(0)).current;
   const buttonSlide = useRef(new Animated.Value(20)).current;
   const fadeAnims = useRef(MOODS.map(() => new Animated.Value(0))).current;
-  
-  // Success Animation Refs
   const successScale = useRef(new Animated.Value(0.7)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
 
+  // ✅ Check daily status whenever the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const checkDailyLog = async () => {
+        const logged = await MoodStorage.hasLoggedToday();
+        setIsAlreadyLogged(logged);
+      };
+      checkDailyLog();
+    }, [])
+  );
+
   useEffect(() => {
-    // Staggered entry animation for the grid items
-    const animations = fadeAnims.map((anim, i) =>
-      Animated.spring(anim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-        delay: i * 40,
-      })
-    );
-    Animated.stagger(40, animations).start();
-  }, []);
+    if (!isAlreadyLogged) {
+      const animations = fadeAnims.map((anim, i) =>
+        Animated.spring(anim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+          delay: i * 40,
+        })
+      );
+      Animated.stagger(40, animations).start();
+    }
+  }, [isAlreadyLogged]);
 
   const handleSelect = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedMood(id);
 
-    // Animate save button in
     Animated.parallel([
       Animated.timing(buttonFade, { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.spring(buttonSlide, { toValue: 0, tension: 40, useNativeDriver: true }),
@@ -62,32 +73,64 @@ export default function MoodGrid() {
   const handleReset = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     setSelectedMood(null);
-    // Hide save button
     Animated.timing(buttonFade, { toValue: 0, duration: 200, useNativeDriver: true }).start();
   };
 
-  const handleSave = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowSuccess(true);
+  const handleSave = async () => {
+    if (!selectedMood) return;
+    const selectedData = MOODS.find(m => m.id === selectedMood);
 
-    // Play success popup animation
-    Animated.parallel([
-      Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.spring(successScale, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
-    ]).start();
+    // ✅ Save to storage using our helper
+    const success = await MoodStorage.saveDailyMood(selectedMood, selectedData?.label || "");
 
-    // Wait 2 seconds, then navigate home
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.replace("/cycle");
-    }, 2000);
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowSuccess(true);
+
+      Animated.parallel([
+        Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(successScale, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
+      ]).start();
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.replace("/cycle");
+      }, 2000);
+    }
   };
 
   const selectedMoodData = MOODS.find(m => m.id === selectedMood);
 
+  // --- RENDERING ---
+
+  // ✅ Show "Already Logged" State
+  if (isAlreadyLogged && !showSuccess) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centeredContent}>
+          <View style={styles.checkCircleLarge}>
+            <Ionicons name="checkmark-done-circle" size={100} color="#4ADE80" />
+          </View>
+          <Text style={styles.title}>Vibe Logged!</Text>
+          <Text style={styles.doneSubText}>You've already checked in today. Consistency is key to understanding your cycle!</Text>
+
+          <Pressable
+            onPress={() => router.replace("/cycle")}
+            style={styles.backHomeBtn}
+          >
+            <Text style={styles.backHomeBtnText}>Go to Dashboard</Text>
+          </Pressable>
+
+          <Pressable onPress={() => setIsAlreadyLogged(false)} style={{ marginTop: 25 }}>
+            <Text style={{ color: "#64748B", fontWeight: "600", fontSize: 13 }}>Edit today's mood</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   const renderItem = ({ item, index }: { item: MoodType; index: number }) => {
     const active = selectedMood === item.id;
-    
     return (
       <Animated.View style={{ opacity: fadeAnims[index], transform: [{ scale: fadeAnims[index] }] }}>
         <Pressable
@@ -101,25 +144,13 @@ export default function MoodGrid() {
               backgroundColor: active ? `${item.color}15` : "rgba(30, 41, 59, 0.4)",
               transform: [{ scale: pressed ? 0.94 : 1 }],
             },
-            active && {
-              shadowColor: item.color,
-              shadowOpacity: 0.5,
-              shadowRadius: 12,
-              elevation: 8,
-              borderWidth: 2,
-            }
+            active && { shadowColor: item.color, shadowOpacity: 0.5, shadowRadius: 12, elevation: 8, borderWidth: 2 }
           ]}
         >
           <View style={[styles.iconContainer, active && { backgroundColor: `${item.color}20` }]}>
-            <Ionicons
-              name={item.icon as any}
-              size={30}
-              color={active ? item.color : "#64748B"}
-            />
+            <Ionicons name={item.icon as any} size={30} color={active ? item.color : "#64748B"} />
           </View>
-          <Text style={[styles.label, active && { color: "#fff", fontWeight: "900" }]}>
-            {item.label}
-          </Text>
+          <Text style={[styles.label, active && { color: "#fff", fontWeight: "900" }]}>{item.label}</Text>
         </Pressable>
       </Animated.View>
     );
@@ -142,20 +173,12 @@ export default function MoodGrid() {
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           <View style={styles.actionBar}>
-            <Pressable 
-                onPress={handleReset} 
-                style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}
-            >
+            <Pressable onPress={handleReset} style={styles.actionBtn}>
               <Ionicons name="refresh-outline" size={20} color="#94A3B8" />
               <Text style={styles.actionText}>Reset</Text>
             </Pressable>
-
             <View style={styles.divider} />
-
-            <Pressable 
-                onPress={() => router.replace("/cycle")} 
-                style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}
-            >
+            <Pressable onPress={() => router.replace("/cycle")} style={styles.actionBtn}>
               <Ionicons name="home-outline" size={20} color="#94A3B8" />
               <Text style={styles.actionText}>Home</Text>
             </Pressable>
@@ -163,13 +186,9 @@ export default function MoodGrid() {
         }
       />
 
-      {/* FLOATING SAVE BUTTON */}
       {selectedMood && (
-        <Animated.View style={[
-          styles.buttonContainer, 
-          { opacity: buttonFade, transform: [{ translateY: buttonSlide }] }
-        ]}>
-          <Pressable 
+        <Animated.View style={[styles.buttonContainer, { opacity: buttonFade, transform: [{ translateY: buttonSlide }] }]}>
+          <Pressable
             onPress={handleSave}
             style={({ pressed }) => [
               styles.saveButton,
@@ -182,7 +201,6 @@ export default function MoodGrid() {
         </Animated.View>
       )}
 
-      {/* 🌟 SUCCESS ANIMATION OVERLAY */}
       <Modal transparent visible={showSuccess} animationType="none">
         <View style={styles.modalOverlay}>
           <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
@@ -190,13 +208,11 @@ export default function MoodGrid() {
             styles.successCard,
             { opacity: successOpacity, transform: [{ scale: successScale }], borderColor: selectedMoodData?.color }
           ]}>
-             <View style={[styles.checkCircle, { backgroundColor: selectedMoodData?.color }]}>
-                <Ionicons name="checkmark-sharp" size={40} color="#fff" />
-             </View>
-             <Text style={styles.successTitle}>Saved!</Text>
-             <Text style={styles.successText}>
-               Your {selectedMoodData?.label.toLowerCase()} mood is logged.
-             </Text>
+            <View style={[styles.checkCircle, { backgroundColor: selectedMoodData?.color }]}>
+              <Ionicons name="checkmark-sharp" size={40} color="#fff" />
+            </View>
+            <Text style={styles.successTitle}>Saved!</Text>
+            <Text style={styles.successText}>Your {selectedMoodData?.label.toLowerCase()} mood is logged.</Text>
           </Animated.View>
         </View>
       </Modal>
@@ -205,100 +221,37 @@ export default function MoodGrid() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-    paddingTop: 60,
-    paddingHorizontal: 16,
-  },
+  container: { flex: 1, backgroundColor: "#0F172A", paddingTop: 60, paddingHorizontal: 16 },
   header: { marginBottom: 30, alignItems: 'center' },
   subHeading: { color: "#38BDF8", fontSize: 11, fontWeight: "900", letterSpacing: 3, marginBottom: 4 },
   title: { fontSize: 26, fontWeight: "900", color: "#fff" },
   grid: { paddingBottom: 140 },
   row: { justifyContent: "space-between", marginBottom: 14 },
-  
-  moodItem: {
-    borderRadius: 24,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-  },
-  iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-    marginBottom: 8,
-  },
+
+  moodItem: { borderRadius: 24, borderWidth: 1.5, alignItems: "center", justifyContent: "center", padding: 10 },
+  iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.5)', marginBottom: 8 },
   label: { fontSize: 12, color: "#94A3B8", fontWeight: "700" },
 
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
+  actionBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20, backgroundColor: 'rgba(30, 41, 59, 0.4)', padding: 14, borderRadius: 20 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
   actionText: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginLeft: 8 },
   divider: { width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 5 },
 
   buttonContainer: { position: 'absolute', bottom: 34, left: 16, right: 16 },
-  saveButton: {
-    height: 60,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 10,
-  },
+  saveButton: { height: 60, borderRadius: 22, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 15, elevation: 10 },
   saveButtonText: { color: "#fff", fontSize: 17, fontWeight: "900" },
 
-  // Success Modal Styles
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  successCard: {
-    width: width * 0.75,
-    backgroundColor: '#1E293B',
-    borderRadius: 32,
-    padding: 30,
-    alignItems: 'center',
-    borderWidth: 2,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-  },
-  checkCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  successText: {
-    fontSize: 14,
-    color: '#94A3B8',
-    textAlign: 'center',
-    fontWeight: '500',
-  }
+  // Success Modal
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  successCard: { width: width * 0.75, backgroundColor: '#1E293B', borderRadius: 32, padding: 30, alignItems: 'center', borderWidth: 2 },
+  checkCircle: { width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  successTitle: { fontSize: 24, fontWeight: '900', color: '#fff', marginBottom: 4 },
+  successText: { fontSize: 14, color: '#94A3B8', textAlign: 'center' },
+
+  // Logged State Styles
+  centeredContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
+  checkCircleLarge: { marginBottom: 20, shadowColor: "#4ADE80", shadowOpacity: 0.4, shadowRadius: 25 },
+  doneSubText: { color: "#94A3B8", textAlign: 'center', fontSize: 15, lineHeight: 22, marginTop: 10 },
+  backHomeBtn: { marginTop: 40, backgroundColor: "#fff", paddingHorizontal: 40, paddingVertical: 18, borderRadius: 24 },
+  backHomeBtnText: { color: "#0F172A", fontWeight: "900", fontSize: 16 }
 });
