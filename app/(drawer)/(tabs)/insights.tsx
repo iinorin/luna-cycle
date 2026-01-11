@@ -46,6 +46,7 @@ export default function InsightsScreen() {
   const [cycleInfo, setCycleInfo] = useState<any>(null);
   const [bleedingStore, setBleedingStore] = useState<any>({});
   const [painStore, setPainStore] = useState<any>({});
+  const [streakStats, setStreakStats] = useState({ current: 0, best: 0 });
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -62,6 +63,7 @@ export default function InsightsScreen() {
     const data = await getCycleData();
     const bleeding = await getBleedingStore();
     const pain = await getAllPainEntries();
+    const streaks = await MoodStorage.getStreakStats();
 
     console.log("🩸 Bleeding data loaded in Insights:", bleeding);
 
@@ -76,6 +78,7 @@ export default function InsightsScreen() {
     setCycleInfo(info);
     setBleedingStore(bleeding);
     setPainStore(pain);
+    setStreakStats(streaks);
 
     progressAnim.setValue(0);
     Animated.timing(progressAnim, {
@@ -417,7 +420,7 @@ export default function InsightsScreen() {
           <Text style={styles.cardTitle}>Average Pain Level</Text>
           <Text style={styles.value}>{avgPain} / 10</Text>
         </View>
-
+                             
       </View>
     </ScrollView>
   );
