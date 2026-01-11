@@ -13,6 +13,7 @@ import {
   BarChart,
 } from "react-native-chart-kit";
 import { useFocusEffect } from "expo-router";
+import { Ionicons } from '@expo/vector-icons'; // Added for trend icons
 
 import { getCycleData, CycleData } from "@/src/features/track-period/storage";
 import { calculateCycleInfo } from "@/src/cycle/calculations";
@@ -135,8 +136,8 @@ export default function InsightsScreen() {
 
 
   /* =========================
-     🩸 BLEEDING INSIGHTS DATA
-     ========================= */
+      🩸 BLEEDING INSIGHTS DATA
+      ========================= */
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const currentMonthData = bleedingStore[currentMonth] || {};
@@ -154,6 +155,11 @@ export default function InsightsScreen() {
   const barScores = months.map((m) =>
     getMonthlyBarValue(bleedingStore[m])
   );
+
+  // NEW: Calculations for the requested features
+  const avgBleedingScore = barScores.length > 0 
+    ? (barScores.reduce((a, b) => a + b, 0) / barScores.length).toFixed(1) 
+    : 0;
 
   const hasPainData = Object.keys(painStore).length > 0;
 
@@ -227,8 +233,41 @@ export default function InsightsScreen() {
         <Text style={styles.phaseText}>{currentPhase}</Text>
       </View>
 
-      {/* 🩸 BLEEDING INSIGHTS */}
+      {/* 🩸 BLEEDING INSIGHTS SECTION */}
       <Text style={styles.sectionTitle}>🩸 Bleeding Insights</Text>
+      
+      {/* NEW: Average Bleeding Intensity Card */}
+      <View style={[styles.card, styles.rowBetween]}>
+        <View>
+          <Text style={styles.cardTitle}>Avg. Flow Intensity</Text>
+          <Text style={[styles.value, { fontSize: 24 }]}>{avgBleedingScore}</Text>
+        </View>
+        <View style={styles.trendBadge}>
+          <Ionicons name="water" size={20} color="#fb7185" />
+          <Text style={styles.trendText}>Monthly Avg</Text>
+        </View>
+      </View>
+
+      {/* NEW: Monthly Bleeding Trend Line Chart */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📈 Flow Intensity Trend</Text>
+        {months.length > 0 ? (
+          <LineChart
+            data={{
+              labels: months.map(m => m.split('-')[1]),
+              datasets: [{ data: barScores }],
+            }}
+            width={screenWidth - 64}
+            height={180}
+            chartConfig={chartConfigBleeding}
+            bezier
+            style={styles.chart}
+          />
+        ) : (
+          <Text style={styles.emptyText}>Not enough monthly data</Text>
+        )}
+      </View>
+
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Distribution (This Month)</Text>
         {pieData.length ? (
@@ -251,6 +290,38 @@ export default function InsightsScreen() {
         ) : (
           <Text style={styles.emptyText}>No data for this month</Text>
         )}
+      </View>
+
+      {/* NEW: Bleeding Frequency Bar Chart */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📊 Flow Frequency by Month</Text>
+        {months.length > 0 ? (
+          <BarChart
+            data={{
+              labels: months.slice(-3).map(m => m.split('-')[1]),
+              datasets: [{ data: barScores.slice(-3) }],
+            }}
+            width={screenWidth - 64}
+            height={200}
+            yAxisLabel=""
+            yAxisSuffix=""
+            fromZero
+            chartConfig={chartConfigDark}
+            style={styles.chart}
+          />
+        ) : (
+          <Text style={styles.emptyText}>No monthly history</Text>
+        )}
+      </View>
+
+      {/* NEW: Bleeding Cycle Consistency Insight Card */}
+      <View style={[styles.card, styles.glassCard]}>
+        <Text style={styles.cardTitle}>🛡️ Flow Consistency</Text>
+        <Text style={styles.meta}>
+          {barScores.length > 1 
+            ? "Your flow intensity has remained stable over the last few months. This indicates a healthy hormonal balance."
+            : "Continue logging your flow daily to see your long-term consistency patterns!"}
+        </Text>
       </View>
 
       {/* 🩹 PAIN INSIGHTS */}
@@ -327,6 +398,13 @@ const chartConfigPain = {
   propsForDots: { r: "4", strokeWidth: "2", stroke: "#e11d48" },
 };
 
+// New config for bleeding trend to make it stand out
+const chartConfigBleeding = {
+  ...chartConfigDark,
+  color: (opacity = 1) => `rgba(251, 113, 133, ${opacity})`,
+  propsForDots: { r: "5", strokeWidth: "2", stroke: "#e11d48" },
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -376,6 +454,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   cardTitle: {
     fontSize: 12,
     fontWeight: "800",
@@ -388,6 +471,20 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: "#fff",
+  },
+  trendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(251, 113, 133, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  trendText: {
+    color: '#fb7185',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
   phaseText: {
     fontSize: 15,
