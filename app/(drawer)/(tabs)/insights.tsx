@@ -169,396 +169,272 @@ export default function InsightsScreen() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* ===== ORIGINAL CONTENT (UNCHANGED) ===== */}
-
       <Text style={styles.title}>📊 Cycle Insights</Text>
-      <Text style={styles.subtitle}>
-        Understanding your rhythm ✨
-      </Text>
+      <Text style={styles.subtitle}>Understanding your rhythm ✨</Text>
 
+      {/* 🌀 Cycle Progress Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🌀 Cycle Progress</Text>
         <Text style={styles.value}>
           Day {cycleInfo.cycleDay} of {cycle.cycleLength}
         </Text>
-
         <View style={styles.progressTrack}>
           <Animated.View
-            style={[
-              styles.progressFill,
-              { width: progressWidth },
-            ]}
+            style={[styles.progressFill, { width: progressWidth }]}
           />
         </View>
       </View>
 
+      {/* 🩸 infoRow */}
       <View style={styles.infoRow}>
         <View style={[styles.card, styles.halfCard]}>
           <Text style={styles.cardTitle}>🩸 Next Period</Text>
           <Text style={styles.value}>
-            {cycleInfo.nextPeriod.toDateString()}
+            {cycleInfo.nextPeriod.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </Text>
         </View>
-
         <View style={[styles.card, styles.halfCard]}>
           <Text style={styles.cardTitle}>🔥 Fertile Window</Text>
           <Text style={styles.value}>
-            Day {cycleInfo.fertileWindow.startDay} –{" "}
-            {cycleInfo.fertileWindow.endDay}
+            Day {cycleInfo.fertileWindow.startDay} – {cycleInfo.fertileWindow.endDay}
           </Text>
         </View>
       </View>
 
+      {/* 📈 Cycle Overview */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>📈 Cycle Overview</Text>
-
         <LineChart
           data={{
-            labels: days
-              .filter((d) => d % 5 === 0)
-              .map(String),
+            labels: days.filter((d) => d % 5 === 0).map(String),
             datasets: [{ data: phaseData }],
           }}
-          width={screenWidth - 48}
-          height={210}
+          width={screenWidth - 64} // Fixed padding overflow
+          height={180}
           bezier
-          chartConfig={{
-            backgroundGradientFrom: "#fdf2f8",
-            backgroundGradientTo: "#fae8ff",
-            decimalPlaces: 0,
-            color: (opacity = 1) =>
-              `rgba(236, 72, 153, ${opacity})`,
-            labelColor: () => "#6b7280",
-            propsForDots: {
-              r: "4",
-              strokeWidth: "2",
-              stroke: "#ec4899",
-            },
-          }}
+          withInnerLines={false}
+          withOuterLines={false}
+          chartConfig={chartConfigDark}
           style={styles.chart}
         />
-
         <Text style={styles.legend}>
           🌸 Period • 🔥 Fertile • ⭐ Ovulation
         </Text>
       </View>
 
-      <View style={[styles.card, styles.softCard]}>
+      <View style={[styles.card, styles.glassCard]}>
         <Text style={styles.cardTitle}>💫 Current Phase</Text>
         <Text style={styles.phaseText}>{currentPhase}</Text>
       </View>
 
-      <View style={[styles.card, styles.softCard]}>
-        <Text style={styles.cardTitle}>🕒 Cycle History</Text>
-        <Text style={styles.meta}>
-          Created:{" "}
-          {cycle.createdAt
-            ? new Date(cycle.createdAt).toDateString()
-            : "—"}
-        </Text>
-        <Text style={styles.meta}>
-          Last Updated:{" "}
-          {cycle.updatedAt
-            ? new Date(cycle.updatedAt).toDateString()
-            : "—"}
-        </Text>
-      </View>
-
-      {/* ===== 🩸 NEW BLEEDING INSIGHTS (ADDED BELOW) ===== */}
-
+      {/* 🩸 BLEEDING INSIGHTS */}
       <Text style={styles.sectionTitle}>🩸 Bleeding Insights</Text>
-
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>
-          Bleeding Distribution (This Month)
-        </Text>
-
+        <Text style={styles.cardTitle}>Distribution (This Month)</Text>
         {pieData.length ? (
           <PieChart
             data={pieData.map((d) => ({
               name: d.name,
               population: d.count,
               color: d.color,
-              legendFontColor: "#374151",
-              legendFontSize: 12,
+              legendFontColor: "#CBD5E1",
+              legendFontSize: 11,
             }))}
-            width={screenWidth - 48}
-            height={220}
+            width={screenWidth - 64}
+            height={180}
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
-            chartConfig={{ color: () => "#000" }}
+            absolute
+            chartConfig={chartConfigDark}
           />
         ) : (
-          <Text style={styles.emptyText}>
-            No bleeding data for this month
-          </Text>
+          <Text style={styles.emptyText}>No data for this month</Text>
+        )}
+      </View>
+
+      {/* 🩹 PAIN INSIGHTS */}
+      <Text style={styles.sectionTitle}>🩹 Pain Insights</Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Pain Intensity Timeline</Text>
+        {hasPainData ? (
+          <LineChart
+            data={{
+              labels: painTimeline.labels,
+              datasets: [{ data: painTimeline.values }],
+            }}
+            width={screenWidth - 64}
+            height={180}
+            bezier
+            chartConfig={chartConfigPain}
+            style={styles.chart}
+          />
+        ) : (
+          <Text style={styles.emptyText}>No pain data recorded yet</Text>
         )}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>
-          Monthly Bleeding Overview
-        </Text>
-
-        {barScores.length ? (
+        <Text style={styles.cardTitle}>Pain by Body Area</Text>
+        {hasPainData ? (
           <BarChart
             data={{
-              labels: months,
-              datasets: [{ data: barScores }],
+              labels: Object.keys(painBodyCounts),
+              datasets: [{ data: Object.values(painBodyCounts) }],
             }}
-            width={screenWidth - 48}
-            height={220}
+            width={screenWidth - 64}
+            height={200}
             yAxisLabel=""
             yAxisSuffix=""
-            chartConfig={{
-              backgroundGradientFrom: "#0F172A",
-              backgroundGradientTo: "#020617",
-              decimalPlaces: 1,
-              color: (o = 1) => `rgba(244, 63, 94, ${o})`,
-              labelColor: () => "#E5E7EB",
-            }}
-            style={{ borderRadius: 16 }}
+            fromZero
+            chartConfig={chartConfigDark}
+            style={styles.chart}
           />
-
         ) : (
-          <Text style={styles.emptyText}>
-            No monthly bleeding data yet
-          </Text>
+          <Text style={styles.emptyText}>No areas logged</Text>
         )}
-
-        {/* ===== 🩹 PAIN INSIGHTS (ADDED, NOTHING REMOVED) ===== */}
-
-        <Text style={styles.sectionTitle}>🩹 Pain Insights</Text>
-
-        {/* Pain Intensity Over Time */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pain Intensity Over Time</Text>
-
-          {hasPainData ? (
-            <LineChart
-              data={{
-                labels: painTimeline.labels,
-                datasets: [{ data: painTimeline.values }],
-              }}
-              width={screenWidth - 48}
-              height={220}
-              bezier
-              chartConfig={{
-                backgroundGradientFrom: "#fff1f2",
-                backgroundGradientTo: "#ffe4e6",
-                decimalPlaces: 0,
-                color: (o = 1) => `rgba(225, 29, 72, ${o})`,
-                labelColor: () => "#7f1d1d",
-                propsForDots: {
-                  r: "4",
-                  strokeWidth: "2",
-                  stroke: "#e11d48",
-                },
-              }}
-              style={{ borderRadius: 16 }}
-            />
-          ) : (
-            <Text style={styles.emptyText}>No pain data recorded yet</Text>
-          )}
-        </View>
-
-        {/* Pain by Body Area */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pain by Body Area</Text>
-
-          {hasPainData ? (
-            <BarChart
-              data={{
-                labels: Object.keys(painBodyCounts),
-                datasets: [{ data: Object.values(painBodyCounts) }],
-              }}
-              width={screenWidth - 48}
-              height={220}
-              yAxisLabel=""
-              yAxisSuffix=""
-
-              chartConfig={{
-                backgroundGradientFrom: "#0F172A",
-                backgroundGradientTo: "#020617",
-                decimalPlaces: 0,
-                color: (o = 1) => `rgba(248, 113, 113, ${o})`,
-                labelColor: () => "#E5E7EB",
-              }}
-              style={{ borderRadius: 16 }}
-            />
-          ) : (
-            <Text style={styles.emptyText}>No pain areas logged</Text>
-          )}
-        </View>
-
-        {/* Pain Severity Distribution */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pain Severity Distribution</Text>
-
-          {hasPainData ? (
-            <PieChart
-              data={[
-                { name: "None", population: painBuckets[0], color: "#e5e7eb" },
-                { name: "Mild", population: painBuckets[1], color: "#fecaca" },
-                { name: "Moderate", population: painBuckets[2], color: "#f87171" },
-                { name: "Severe", population: painBuckets[3], color: "#b91c1c" },
-              ].filter((d) => d.population > 0)}
-              width={screenWidth - 48}
-              height={220}
-              accessor="population"
-              backgroundColor="transparent"
-              chartConfig={{ color: () => "#000" }}
-              paddingLeft="15"
-            />
-          ) : (
-            <Text style={styles.emptyText}>No pain severity data</Text>
-          )}
-        </View>
-
-        {/* Average Pain */}
-        <View style={[styles.card, styles.softCard]}>
-          <Text style={styles.cardTitle}>Average Pain Level</Text>
-          <Text style={styles.value}>{avgPain} / 10</Text>
-        </View>
-                             
       </View>
-      
+
+      {/* 🔥 STREAKS */}
       <Text style={styles.sectionTitle}>🔥 Habit Insights</Text>
-      
       <StreakCard />
 
-      <View style={[styles.card, styles.softCard, { marginBottom: 60 }]}>
+      <View style={[styles.card, styles.glassCard, { marginBottom: 60 }]}>
         <Text style={styles.cardTitle}>💡 Consistency Tip</Text>
         <Text style={styles.meta}>
-          Logging your mood daily helps us build a more accurate hormonal map for you. 
-          Current Best: {streakStats.best} days!
+          Your current best is <Text style={{color: '#fff', fontWeight: 'bold'}}>{streakStats.best} days</Text>. 
+          Keep logging daily to improve prediction accuracy!
         </Text>
       </View>
-
-
     </ScrollView>
   );
 }
+
+// Separate Chart Configs for cleaner code
+const chartConfigDark = {
+  backgroundGradientFrom: "#1e293b",
+  backgroundGradientTo: "#1e293b",
+  decimalPlaces: 0,
+  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(203, 213, 225, ${opacity})`,
+  style: { borderRadius: 16 },
+  propsForDots: { r: "4", strokeWidth: "2", stroke: "#ec4899" },
+};
+
+const chartConfigPain = {
+  ...chartConfigDark,
+  color: (opacity = 1) => `rgba(225, 29, 72, ${opacity})`,
+  propsForDots: { r: "4", strokeWidth: "2", stroke: "#e11d48" },
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#12002b",
+  },
+  scrollContent: {
     paddingTop: 60,
     paddingHorizontal: 16,
-  },
-
-  scrollContent: {
     paddingBottom: 40,
   },
-
+  title: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#fff",
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    color: "#a78bfa",
+    marginBottom: 24,
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#fff",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)", // Glass effect
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    overflow: "hidden", // Prevents chart bleeding
+  },
+  glassCard: {
+    backgroundColor: "rgba(139, 92, 246, 0.15)", // Subtle purple tint
+    borderColor: "rgba(139, 92, 246, 0.3)",
+  },
+  halfCard: {
+    width: "48%",
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#d8b4fe",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  value: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  phaseText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#ddd6fe",
+  },
+  progressTrack: {
+    height: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 10,
+    marginTop: 12,
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#ec4899",
+    borderRadius: 10,
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+    paddingRight: 40, // Important for LineChart labels
+  },
+  legend: {
+    fontSize: 11,
+    color: "#94a3b8",
+    textAlign: "center",
+    marginTop: 4,
+  },
+  emptyText: {
+    color: "#64748b",
+    fontSize: 13,
+    textAlign: "center",
+    marginVertical: 20,
+  },
+  meta: {
+    fontSize: 14,
+    color: "#cbd5e1",
+    lineHeight: 20,
+  },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#12002b",
   },
-
   empty: {
     color: "#d8b4fe",
-    fontSize: 15,
-  },
-
-  emptyText: {
-    fontSize: 13,
-    color: "#6b7280",
-    marginTop: 8,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#fff",
-  },
-
-  subtitle: {
-    color: "#e9d5ff",
-    marginBottom: 22,
-    fontSize: 14,
-  },
-
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#fff",
-    marginVertical: 16,
-  },
-
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-
-  halfCard: {
-    width: "48%",
-    backgroundColor: "#fdf4ff",
-  },
-
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
-  },
-
-  softCard: {
-    backgroundColor: "#fdf4ff",
-  },
-
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#6b21a8",
-    marginBottom: 6,
-  },
-
-  value: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-
-  progressTrack: {
-    height: 9,
-    backgroundColor: "#ede9fe",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginTop: 8,
-  },
-
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#ec4899",
-  },
-
-  chart: {
-    borderRadius: 16,
-    marginTop: 8,
-  },
-
-  legend: {
-    marginTop: 10,
-    fontSize: 12,
-    color: "#6b7280",
-    textAlign: "center",
-  },
-
-  phaseText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#4c1d95",
-  },
-
-  meta: {
-    fontSize: 13,
-    color: "#4b5563",
-    marginTop: 4,
+    fontSize: 16,
   },
 });
