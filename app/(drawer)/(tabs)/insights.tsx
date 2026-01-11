@@ -37,6 +37,7 @@ import {
   getAveragePainIntensity,
 } from "@/src/pain/utils";
 
+import StreakCard from "@/src/pain/StreakCard";
 import { MoodStorage } from "@/src/mood/moodStorage";
 
 const screenWidth = Dimensions.get("window").width;
@@ -422,6 +423,20 @@ export default function InsightsScreen() {
         </View>
                              
       </View>
+      
+      <Text style={styles.sectionTitle}>🔥 Habit Insights</Text>
+      
+      <StreakCard />
+
+      <View style={[styles.card, styles.softCard, { marginBottom: 60 }]}>
+        <Text style={styles.cardTitle}>💡 Consistency Tip</Text>
+        <Text style={styles.meta}>
+          Logging your mood daily helps us build a more accurate hormonal map for you. 
+          Current Best: {streakStats.best} days!
+        </Text>
+      </View>
+
+
     </ScrollView>
   );
 }
