@@ -15,7 +15,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { BlurView } from "expo-blur";
 
 import { MOODS, MoodType } from "@/src/mood/moodTypes";
-import { MoodStorage } from "@/src/mood/moodStorage"; // ✅ Import your helper
+import { MoodStorage } from "@/src/mood/moodStorage";
 
 const { width } = Dimensions.get("window");
 const COLUMN_COUNT = 3;
@@ -26,24 +26,46 @@ export default function MoodGrid() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isAlreadyLogged, setIsAlreadyLogged] = useState(false);
-
+  const [todayMood, setTodayMood] = useState<MoodType | null>(null);
+  
   // Animation Refs
   const buttonFade = useRef(new Animated.Value(0)).current;
   const buttonSlide = useRef(new Animated.Value(20)).current;
   const fadeAnims = useRef(MOODS.map(() => new Animated.Value(0))).current;
   const successScale = useRef(new Animated.Value(0.7)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current; // For the floating icon
 
-  // ✅ Check daily status whenever the screen comes into focus
+  // ✅ Check daily status and fetch today's specific mood
   useFocusEffect(
     useCallback(() => {
       const checkDailyLog = async () => {
         const logged = await MoodStorage.hasLoggedToday();
         setIsAlreadyLogged(logged);
+        
+        if (logged) {
+          const history = await MoodStorage.getHistory();
+          if (history.length > 0) {
+            const lastMood = MOODS.find(m => m.id === history[0].id);
+            setTodayMood(lastMood || null);
+          }
+        }
       };
       checkDailyLog();
     }, [])
   );
+
+  // ✅ Floating animation for the "Already Logged" icon
+  useEffect(() => {
+    if (isAlreadyLogged) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, { toValue: -10, duration: 1500, useNativeDriver: true }),
+          Animated.timing(floatAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [isAlreadyLogged]);
 
   useEffect(() => {
     if (!isAlreadyLogged) {
@@ -63,7 +85,6 @@ export default function MoodGrid() {
   const handleSelect = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedMood(id);
-
     Animated.parallel([
       Animated.timing(buttonFade, { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.spring(buttonSlide, { toValue: 0, tension: 40, useNativeDriver: true }),
@@ -79,19 +100,16 @@ export default function MoodGrid() {
   const handleSave = async () => {
     if (!selectedMood) return;
     const selectedData = MOODS.find(m => m.id === selectedMood);
-
-    // ✅ Save to storage using our helper
     const success = await MoodStorage.saveDailyMood(selectedMood, selectedData?.label || "");
 
     if (success) {
+      setTodayMood(selectedData || null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowSuccess(true);
-
       Animated.parallel([
         Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
         Animated.spring(successScale, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
       ]).start();
-
       setTimeout(() => {
         setShowSuccess(false);
         router.replace("/cycle");
@@ -101,23 +119,32 @@ export default function MoodGrid() {
 
   const selectedMoodData = MOODS.find(m => m.id === selectedMood);
 
-  // --- RENDERING ---
-
-  // ✅ Show "Already Logged" State
+  // ✅ RENDERING THE "ALREADY LOGGED" SCREEN
   if (isAlreadyLogged && !showSuccess) {
     return (
       <View style={styles.container}>
         <View style={styles.centeredContent}>
-          <View style={styles.checkCircleLarge}>
-            <Ionicons name="checkmark-done-circle" size={100} color="#4ADE80" />
+          <View style={styles.checkContainer}>
+            <Ionicons name="checkmark-done-circle" size={40} color="#4ADE80" />
           </View>
+          
           <Text style={styles.title}>Vibe Logged!</Text>
-          <Text style={styles.doneSubText}>You've already checked in today. Consistency is key to understanding your cycle!</Text>
+          
+          {/* Animated Today Mood Card */}
+          <Animated.View style={[
+            styles.todayCard, 
+            { transform: [{ translateY: floatAnim }], borderColor: todayMood?.color }
+          ]}>
+             <Ionicons name={todayMood?.icon as any} size={50} color={todayMood?.color} />
+             <Text style={[styles.todayMoodLabel, { color: todayMood?.color }]}>
+               {todayMood?.label}
+             </Text>
+             <Text style={styles.todaySubtext}>This is how you're feeling today</Text>
+          </Animated.View>
 
-          <Pressable
-            onPress={() => router.replace("/cycle")}
-            style={styles.backHomeBtn}
-          >
+          <Text style={styles.doneSubText}>Consistency is key to understanding your cycle. See you tomorrow!</Text>
+          
+          <Pressable onPress={() => router.replace("/cycle")} style={styles.backHomeBtn}>
             <Text style={styles.backHomeBtnText}>Go to Dashboard</Text>
           </Pressable>
 
@@ -129,6 +156,7 @@ export default function MoodGrid() {
     );
   }
 
+  // --- STANDARD GRID RENDER ---
   const renderItem = ({ item, index }: { item: MoodType; index: number }) => {
     const active = selectedMood === item.id;
     return (
@@ -188,7 +216,7 @@ export default function MoodGrid() {
 
       {selectedMood && (
         <Animated.View style={[styles.buttonContainer, { opacity: buttonFade, transform: [{ translateY: buttonSlide }] }]}>
-          <Pressable
+          <Pressable 
             onPress={handleSave}
             style={({ pressed }) => [
               styles.saveButton,
@@ -208,11 +236,11 @@ export default function MoodGrid() {
             styles.successCard,
             { opacity: successOpacity, transform: [{ scale: successScale }], borderColor: selectedMoodData?.color }
           ]}>
-            <View style={[styles.checkCircle, { backgroundColor: selectedMoodData?.color }]}>
-              <Ionicons name="checkmark-sharp" size={40} color="#fff" />
-            </View>
-            <Text style={styles.successTitle}>Saved!</Text>
-            <Text style={styles.successText}>Your {selectedMoodData?.label.toLowerCase()} mood is logged.</Text>
+             <View style={[styles.checkCircle, { backgroundColor: selectedMoodData?.color }]}>
+                <Ionicons name="checkmark-sharp" size={40} color="#fff" />
+             </View>
+             <Text style={styles.successTitle}>Saved!</Text>
+             <Text style={styles.successText}>Your mood is logged.</Text>
           </Animated.View>
         </View>
       </Modal>
@@ -227,21 +255,16 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "900", color: "#fff" },
   grid: { paddingBottom: 140 },
   row: { justifyContent: "space-between", marginBottom: 14 },
-
   moodItem: { borderRadius: 24, borderWidth: 1.5, alignItems: "center", justifyContent: "center", padding: 10 },
   iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.5)', marginBottom: 8 },
   label: { fontSize: 12, color: "#94A3B8", fontWeight: "700" },
-
   actionBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20, backgroundColor: 'rgba(30, 41, 59, 0.4)', padding: 14, borderRadius: 20 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
   actionText: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginLeft: 8 },
   divider: { width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 5 },
-
   buttonContainer: { position: 'absolute', bottom: 34, left: 16, right: 16 },
   saveButton: { height: 60, borderRadius: 22, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 15, elevation: 10 },
   saveButtonText: { color: "#fff", fontSize: 17, fontWeight: "900" },
-
-  // Success Modal
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   successCard: { width: width * 0.75, backgroundColor: '#1E293B', borderRadius: 32, padding: 30, alignItems: 'center', borderWidth: 2 },
   checkCircle: { width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
@@ -250,8 +273,23 @@ const styles = StyleSheet.create({
 
   // Logged State Styles
   centeredContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
-  checkCircleLarge: { marginBottom: 20, shadowColor: "#4ADE80", shadowOpacity: 0.4, shadowRadius: 25 },
-  doneSubText: { color: "#94A3B8", textAlign: 'center', fontSize: 15, lineHeight: 22, marginTop: 10 },
-  backHomeBtn: { marginTop: 40, backgroundColor: "#fff", paddingHorizontal: 40, paddingVertical: 18, borderRadius: 24 },
+  checkContainer: { marginBottom: 10 },
+  todayCard: {
+    width: width * 0.8,
+    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    borderRadius: 30,
+    padding: 25,
+    marginVertical: 25,
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  todayMoodLabel: { fontSize: 28, fontWeight: '900', marginTop: 10 },
+  todaySubtext: { color: '#94A3B8', fontSize: 12, marginTop: 4, fontWeight: '600' },
+  doneSubText: { color: "#64748B", textAlign: 'center', fontSize: 14, lineHeight: 20 },
+  backHomeBtn: { marginTop: 35, backgroundColor: "#fff", paddingHorizontal: 40, paddingVertical: 18, borderRadius: 24 },
   backHomeBtnText: { color: "#0F172A", fontWeight: "900", fontSize: 16 }
 });
