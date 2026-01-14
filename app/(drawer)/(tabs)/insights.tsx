@@ -158,8 +158,8 @@ export default function InsightsScreen() {
   );
 
   // NEW: Calculations for the requested features
-  const avgBleedingScore = barScores.length > 0 
-    ? (barScores.reduce((a, b) => a + b, 0) / barScores.length).toFixed(1) 
+  const avgBleedingScore = barScores.length > 0
+    ? (barScores.reduce((a, b) => a + b, 0) / barScores.length).toFixed(1)
     : 0;
 
   const hasPainData = Object.keys(painStore).length > 0;
@@ -170,10 +170,10 @@ export default function InsightsScreen() {
   const avgPain = getAveragePainIntensity(painStore);
 
   const bleedingPainCorrelation = getBleedingPainCorrelation(
-  painStore,
-  bleedingStore
-);
-  console.log("🩸 Bleeding-Pain Correlation:", bleedingPainCorrelation) ;
+    painStore,
+    bleedingStore
+  );
+  console.log("🩸 Bleeding-Pain Correlation:", bleedingPainCorrelation);
 
   return (
     <ScrollView
@@ -241,7 +241,7 @@ export default function InsightsScreen() {
 
       {/* 🩸 BLEEDING INSIGHTS SECTION */}
       <Text style={styles.sectionTitle}>🩸 Bleeding Insights</Text>
-      
+
       {/* NEW: Average Bleeding Intensity Card */}
       <View style={[styles.card, styles.rowBetween]}>
         <View>
@@ -324,7 +324,7 @@ export default function InsightsScreen() {
       <View style={[styles.card, styles.glassCard]}>
         <Text style={styles.cardTitle}>🛡️ Flow Consistency</Text>
         <Text style={styles.meta}>
-          {barScores.length > 1 
+          {barScores.length > 1
             ? "Your flow intensity has remained stable over the last few months. This indicates a healthy hormonal balance."
             : "Continue logging your flow daily to see your long-term consistency patterns!"}
         </Text>
@@ -372,6 +372,47 @@ export default function InsightsScreen() {
         )}
       </View>
 
+  
+      {/* 🔗 Bleeding ↔ Pain Correlation */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          🩸🩹 Bleeding & Pain Correlation
+        </Text>
+
+        {bleedingPainCorrelation.labels.length ? (
+          <LineChart
+            data={{
+              labels: bleedingPainCorrelation.labels.filter(
+                (_, i) => i % 2 === 0
+              ),
+              datasets: [
+                {
+                  data: bleedingPainCorrelation.painValues,
+                  strokeWidth: 3,
+                },
+                {
+                  data: bleedingPainCorrelation.bleedingValues.map(
+                    (v) => v * 3
+                  ),
+                  strokeWidth: 2,
+                },
+              ],
+              legend: ["Pain Intensity", "Bleeding Level"],
+            }}
+            width={screenWidth - 64}
+            height={200}
+            bezier
+            chartConfig={chartConfigPain}
+            style={styles.chart}
+          />
+        ) : (
+          <Text style={styles.emptyText}>
+            Not enough data to show correlation yet
+          </Text>
+        )}
+      </View>
+
+
       {/* 🔥 STREAKS */}
       <Text style={styles.sectionTitle}>🔥 Habit Insights</Text>
       <StreakCard />
@@ -379,13 +420,13 @@ export default function InsightsScreen() {
       <View style={[styles.card, styles.glassCard, { marginBottom: 60 }]}>
         <Text style={styles.cardTitle}>💡 Consistency Tip</Text>
         <Text style={styles.meta}>
-          Your current best is <Text style={{color: '#fff', fontWeight: 'bold'}}>{streakStats.best} days</Text>. 
+          Your current best is <Text style={{ color: '#fff', fontWeight: 'bold' }}>{streakStats.best} days</Text>.
           Keep logging daily to improve prediction accuracy!
         </Text>
       </View>
     </ScrollView>
 
-    
+
   );
 }
 
