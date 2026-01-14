@@ -183,8 +183,22 @@ export default function InsightsScreen() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>📊 Cycle Insights</Text>
-      <Text style={styles.subtitle}>Understanding your rhythm ✨</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>📊 Cycle Insights</Text>
+          <Text style={styles.subtitle}>Understanding your rhythm ✨</Text>
+        </View>
+
+        <InsightsMenu
+          onSummaryPress={() => {
+            console.log("Open summary modal");
+          }}
+          onDownloadPress={() => {
+            console.log("Generate PDF");
+          }}
+        />
+      </View>
+
 
       {/* 🌀 Cycle Progress Card */}
       <View style={styles.card}>
@@ -374,7 +388,7 @@ export default function InsightsScreen() {
         )}
       </View>
 
-  
+
       {/* 🔗 Bleeding ↔ Pain Correlation */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
@@ -586,4 +600,5 @@ const styles = StyleSheet.create({
     color: "#d8b4fe",
     fontSize: 16,
   },
+  
 });
