@@ -600,5 +600,9 @@ const styles = StyleSheet.create({
     color: "#d8b4fe",
     fontSize: 16,
   },
-  
+  headerRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},
 });
