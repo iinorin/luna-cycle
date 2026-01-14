@@ -384,8 +384,11 @@ export default function InsightsScreen() {
         </Text>
       </View>
     </ScrollView>
+
+    
   );
 }
+
 
 // Separate Chart Configs for cleaner code
 const chartConfigDark = {
