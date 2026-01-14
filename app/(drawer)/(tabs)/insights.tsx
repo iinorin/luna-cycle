@@ -36,6 +36,7 @@ import {
   getPainBodyPartCounts,
   getPainIntensityBuckets,
   getAveragePainIntensity,
+  getBleedingPainCorrelation,
 } from "@/src/pain/utils";
 
 import StreakCard from "@/src/pain/StreakCard";
@@ -168,6 +169,11 @@ export default function InsightsScreen() {
   const painBuckets = getPainIntensityBuckets(painStore);
   const avgPain = getAveragePainIntensity(painStore);
 
+  const bleedingPainCorrelation = getBleedingPainCorrelation(
+  painStore,
+  bleedingStore
+);
+  console.log("🩸 Bleeding-Pain Correlation:", bleedingPainCorrelation) ;
 
   return (
     <ScrollView
