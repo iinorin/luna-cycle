@@ -98,3 +98,49 @@ export function getAveragePainIntensity(store: PainStore) {
 
   return Number((total / entries.length).toFixed(1));
 }
+
+/* ----------------------------------
+   6️⃣ Bleeding ↔ Pain Correlation
+----------------------------------- */
+/**
+ * bleedingStore shape:
+ * {
+ *   "YYYY-MM": {
+ *     "DD": number; // 0–3 (None → Heavy)
+ *   }
+ * }
+ */
+
+export function getBleedingPainCorrelation(
+  painStore: PainStore,
+  bleedingStore: Record<string, Record<string, number>>
+) {
+  const merged: {
+    date: string;
+    pain: number;
+    bleeding: number;
+  }[] = [];
+
+  Object.entries(painStore || {}).forEach(([date, painEntry]) => {
+    const month = date.slice(0, 7); // YYYY-MM
+    const day = date.slice(8, 10); // DD
+
+    const bleedingLevel =
+      bleedingStore?.[month]?.[day] ?? 0;
+
+    merged.push({
+      date,
+      pain: painEntry.level ?? 0,
+      bleeding: bleedingLevel,
+    });
+  });
+
+  // Sort by date
+  merged.sort((a, b) => a.date.localeCompare(b.date));
+
+  return {
+    labels: merged.map((d) => d.date.slice(5)), // MM-DD
+    painValues: merged.map((d) => d.pain),
+    bleedingValues: merged.map((d) => d.bleeding),
+  };
+}
