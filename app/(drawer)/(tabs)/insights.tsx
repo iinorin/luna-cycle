@@ -191,7 +191,7 @@ const bleedingDaysThisMonth =
     .length;
 
   return (
-    <ScrollView
+    <><ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
@@ -206,8 +206,7 @@ const bleedingDaysThisMonth =
           onSummaryPress={() => setSummaryOpen(true)}
           onDownloadPress={() => {
             console.log("Generate PDF");
-          }}
-        />
+          } } />
 
       </View>
 
@@ -220,8 +219,7 @@ const bleedingDaysThisMonth =
         </Text>
         <View style={styles.progressTrack}>
           <Animated.View
-            style={[styles.progressFill, { width: progressWidth }]}
-          />
+            style={[styles.progressFill, { width: progressWidth }]} />
         </View>
       </View>
 
@@ -255,8 +253,7 @@ const bleedingDaysThisMonth =
           withInnerLines={false}
           withOuterLines={false}
           chartConfig={chartConfigDark}
-          style={styles.chart}
-        />
+          style={styles.chart} />
         <Text style={styles.legend}>
           🌸 Period • 🔥 Fertile • ⭐ Ovulation
         </Text>
@@ -295,8 +292,7 @@ const bleedingDaysThisMonth =
             height={180}
             chartConfig={chartConfigBleeding}
             bezier
-            style={styles.chart}
-          />
+            style={styles.chart} />
         ) : (
           <Text style={styles.emptyText}>Not enough monthly data</Text>
         )}
@@ -319,8 +315,7 @@ const bleedingDaysThisMonth =
             backgroundColor="transparent"
             paddingLeft="15"
             absolute
-            chartConfig={chartConfigDark}
-          />
+            chartConfig={chartConfigDark} />
         ) : (
           <Text style={styles.emptyText}>No data for this month</Text>
         )}
@@ -341,8 +336,7 @@ const bleedingDaysThisMonth =
             yAxisSuffix=""
             fromZero
             chartConfig={chartConfigDark}
-            style={styles.chart}
-          />
+            style={styles.chart} />
         ) : (
           <Text style={styles.emptyText}>No monthly history</Text>
         )}
@@ -372,8 +366,7 @@ const bleedingDaysThisMonth =
             height={180}
             bezier
             chartConfig={chartConfigPain}
-            style={styles.chart}
-          />
+            style={styles.chart} />
         ) : (
           <Text style={styles.emptyText}>No pain data recorded yet</Text>
         )}
@@ -393,8 +386,7 @@ const bleedingDaysThisMonth =
             yAxisSuffix=""
             fromZero
             chartConfig={chartConfigDark}
-            style={styles.chart}
-          />
+            style={styles.chart} />
         ) : (
           <Text style={styles.emptyText}>No areas logged</Text>
         )}
@@ -431,8 +423,7 @@ const bleedingDaysThisMonth =
             height={200}
             bezier
             chartConfig={chartConfigPain}
-            style={styles.chart}
-          />
+            style={styles.chart} />
         ) : (
           <Text style={styles.emptyText}>
             Not enough data to show correlation yet
@@ -453,8 +444,17 @@ const bleedingDaysThisMonth =
         </Text>
       </View>
     </ScrollView>
-
-
+    
+    <InsightsSummaryModal
+        visible={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        cycleDay={cycleInfo.cycleDay}
+        cycleLength={cycle.cycleLength}
+        avgPain={avgPain}
+        mostPainArea={mostPainArea}
+        bleedingDays={bleedingDaysThisMonth}
+        moodStreak={streakStats} /></>
+  
   );
 }
 
