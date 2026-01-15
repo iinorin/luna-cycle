@@ -43,6 +43,8 @@ import StreakCard from "@/src/pain/StreakCard";
 import { MoodStorage } from "@/src/mood/moodStorage";
 
 import InsightsMenu from "@/src/insights/InsightsMenu";
+import InsightsSummaryModal from "@/src/insights/InsightsSummaryModal";
+
 
 const screenWidth = Dimensions.get("window").width;
 
