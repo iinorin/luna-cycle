@@ -54,6 +54,8 @@ export default function InsightsScreen() {
   const [bleedingStore, setBleedingStore] = useState<any>({});
   const [painStore, setPainStore] = useState<any>({});
   const [streakStats, setStreakStats] = useState({ current: 0, best: 0 });
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -192,13 +194,12 @@ export default function InsightsScreen() {
         </View>
 
         <InsightsMenu
-          onSummaryPress={() => {
-            console.log("Open summary modal");
-          }}
+          onSummaryPress={() => setSummaryOpen(true)}
           onDownloadPress={() => {
             console.log("Generate PDF");
           }}
         />
+
       </View>
 
 
@@ -603,8 +604,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   headerRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-},
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 });
