@@ -181,6 +181,15 @@ export default function InsightsScreen() {
   );
   console.log("🩸 Bleeding-Pain Correlation:", bleedingPainCorrelation);
 
+  const mostPainArea =
+  Object.entries(painBodyCounts || {}).sort(
+    (a, b) => b[1] - a[1]
+  )[0]?.[0];
+
+const bleedingDaysThisMonth =
+  Object.values(currentMonthData || {}).filter(Boolean)
+    .length;
+
   return (
     <ScrollView
       style={styles.container}
