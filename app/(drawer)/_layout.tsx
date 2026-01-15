@@ -58,6 +58,14 @@ export default function DrawerLayout() {
           title: "🔥 Pain Tracker",
         }}
       />
+
+      <Drawer.Screen
+        name="energyBar"
+        options={{
+          title: "⚡ Energy Bar",
+        }}
+      />
+
     </Drawer>
   );
 }
