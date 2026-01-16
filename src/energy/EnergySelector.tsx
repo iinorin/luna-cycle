@@ -4,7 +4,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
 
-export default function EnergySelector({ value, onChange }: { value?: EnergyLevel; onChange: (level: EnergyLevel) => void }) {
+export default function EnergySelector({
+  value = 3,
+  onChange,
+}: {
+  value?: EnergyLevel;
+  onChange?: (level: EnergyLevel) => void;
+}) {
+
   const [selected, setSelected] = useState<EnergyLevel>(3);
 
   const handleSave = async () => {

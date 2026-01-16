@@ -1,14 +1,18 @@
-import { View } from "react-native";
-import { useState } from "react";
-import { EnergySelector } from "@/src/energy/EnergySelector";
-import { EnergyLevel } from "@/src/energy/energyTypes";
+import { View, StyleSheet } from "react-native";
+import EnergySelector from "@/src/energy/EnergySelector";
 
 export default function EnergyBarScreen() {
-  const [energy, setEnergy] = useState<EnergyLevel>();
-
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <EnergySelector value={energy} onChange={setEnergy} />
+    <View style={styles.container}>
+      <EnergySelector />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+});
