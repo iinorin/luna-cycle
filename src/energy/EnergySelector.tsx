@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
 import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
-import EnergyBody from "./EnergyBody";
 
 export default function EnergySelector({
   value = 3,
@@ -14,18 +19,18 @@ export default function EnergySelector({
   const [selected, setSelected] = useState<EnergyLevel>(value);
 
   /**
-   * 🔁 Keep local state in sync with parent value
-   * (important when editing history / insights)
+   * 🔁 Keep local state in sync with parent
+   * (important for editing history / insights)
    */
   useEffect(() => {
     setSelected(value);
   }, [value]);
 
   /**
-   * 🛡️ Safe lookup (prevents crash if data is ever invalid)
+   * 🛡️ Safe lookup
    */
   const currentLevel =
-    ENERGY_LEVELS.find((l) => l.level === selected) ?? ENERGY_LEVELS[0];
+    ENERGY_LEVELS.find((l) => l.level === selected) ?? ENERGY_LEVELS[2];
 
   const handleSave = async () => {
     await saveEnergyForToday(selected);
@@ -37,11 +42,12 @@ export default function EnergySelector({
     <View style={styles.container}>
       <Text style={styles.title}>Energy Mapping</Text>
 
-      {/* 🧍 BODY ENERGY VISUAL */}
-      <View style={{ marginBottom: 20 }}>
-        <EnergyBody
-          fillPercent={currentLevel.fillPercent}
-          color={currentLevel.color}
+      {/* 🧍 ENERGY BODY IMAGE */}
+      <View style={styles.imageWrapper}>
+        <Image
+          source={currentLevel.image}
+          style={styles.energyImage}
+          resizeMode="contain"
         />
       </View>
 
@@ -94,62 +100,3 @@ export default function EnergySelector({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 24,
-    padding: 20,
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  title: {
-    color: "#d8b4fe",
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    marginBottom: 20,
-    letterSpacing: 1,
-  },
-  statsRow: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  statItem: {
-    width: "18%",
-    alignItems: "center",
-  },
-  percentText: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  colorButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 12,
-  },
-  statusLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  saveBtn: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  saveText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-});
