@@ -100,3 +100,75 @@ export default function EnergySelector({
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 24,
+    padding: 20,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  title: {
+    color: "#d8b4fe",
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    marginBottom: 20,
+    letterSpacing: 1,
+  },
+
+  /* 🧍 BODY IMAGE */
+  imageWrapper: {
+    height: 260,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  energyImage: {
+    height: 260,
+    width: 120,
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  statItem: {
+    width: "18%",
+    alignItems: "center",
+  },
+  percentText: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  colorButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 12,
+  },
+  statusLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  saveBtn: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
