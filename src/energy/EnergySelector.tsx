@@ -107,7 +107,7 @@ export default function EnergySelector({
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    flex: 1,    
     backgroundColor: "#0f0e0e",
     justifyContent: "center",
   },
