@@ -1,5 +1,1 @@
-import PainScreen from "@/src/pain/PainScreen";
-
-export default function Pain() {
-  return <PainScreen />;
-}
+export { default } from "@/src/pain/PainScreen";
