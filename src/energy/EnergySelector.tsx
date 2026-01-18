@@ -104,3 +104,88 @@ export default function EnergySelector({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#0f0e0e",
+    justifyContent: "center",
+  },
+
+  card: {
+    backgroundColor: "#f8fafc",
+    marginHorizontal: 20,
+    borderRadius: 32,
+    padding: 24,
+    alignItems: "center",
+  },
+
+  question: {
+    backgroundColor: "#000",
+    color: "#fff",
+    padding: 16,
+    borderRadius: 20,
+    textAlign: "center",
+    fontWeight: "700",
+    marginBottom: 20,
+  },
+
+  title: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+
+  energyImage: {
+    height: 220,
+    width: 120,
+    marginBottom: 20,
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  percentText: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+
+  colorButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    borderColor: "#000",
+  },
+
+  status: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 24,
+  },
+
+  saveBtn: {
+    backgroundColor: "#000",
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 18,
+    alignItems: "center",
+  },
+
+  saveText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
