@@ -63,3 +63,75 @@ export default function EnergySuccess({
     </View>
   );
 }
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#0f0e0e",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  card: {
+    width: "90%",
+    backgroundColor: "#2c3946",
+    borderRadius: 32,
+    padding: 28,
+    alignItems: "center",
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 20,
+  },
+
+  percent: {
+    fontSize: 64,
+    fontWeight: "900",
+    marginBottom: 8,
+  },
+
+  label: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 24,
+  },
+
+  barRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 32,
+  },
+
+  bar: {
+    width: 18,
+    height: 70,
+    borderRadius: 10,
+  },
+
+  primaryBtn: {
+    backgroundColor: "#000",
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  primaryText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  secondaryBtn: {
+    paddingVertical: 12,
+  },
+
+  secondaryText: {
+    color: "#94a3b8",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+});
