@@ -14,18 +14,21 @@ import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
 
 export default function EnergySelector({
-  value = 3,
+  value,
   onChange,
 }: {
   value?: EnergyLevel;
   onChange?: (level: EnergyLevel) => void;
 }) {
-  const [selected, setSelected] = useState<EnergyLevel>(value);
+  const [selected, setSelected] = useState<EnergyLevel>(value ?? 3);
+
   const router = useRouter();
 
-  useEffect(() => {
+ useEffect(() => {
+  if (value !== undefined) {
     setSelected(value);
-  }, [value]);
+  }
+}, [value]);
 
   const currentLevel =
     ENERGY_LEVELS.find((l) => l.level === selected) ?? ENERGY_LEVELS[2];
@@ -119,7 +122,8 @@ export default function EnergySelector({
             styles.saveBtn,
             selected === value && { opacity: 0.5 },
           ]}
-          disabled={selected === value}
+          disabled={value !== undefined && selected === value}
+
           onPress={handleSave}
         >
           <Text style={styles.saveText}>Save Daily Energy</Text>
