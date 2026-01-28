@@ -8,6 +8,8 @@ import {
   StatusBar,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
+
 import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
 
@@ -19,6 +21,7 @@ export default function EnergySelector({
   onChange?: (level: EnergyLevel) => void;
 }) {
   const [selected, setSelected] = useState<EnergyLevel>(value);
+  const router = useRouter();
 
   useEffect(() => {
     setSelected(value);
@@ -33,15 +36,32 @@ export default function EnergySelector({
   };
 
   const handleSave = async () => {
-    await saveEnergyForToday(selected);
-    onChange?.(selected);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    console.log("Saved energy level:", selected);
+    try {
+      await saveEnergyForToday(selected);
+      onChange?.(selected);
+
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
+
+      router.push({
+        pathname: "/energy/energy-success",
+        params: {
+          type: 'energy',
+          level: selected,
+          label: currentLevel.label
+        },
+      })
+
+    } catch (e) {
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Error
+      );
+    }
   };
 
   return (
     <View style={styles.root}>
-      {/* STATUS BAR */}
       <StatusBar backgroundColor="#0f0e0e" barStyle="light-content" />
 
       <View style={styles.card}>
@@ -51,14 +71,12 @@ export default function EnergySelector({
 
         <Text style={styles.title}>Energy Mapping</Text>
 
-        {/* IMAGE */}
         <Image
           source={currentLevel.image}
           style={styles.energyImage}
           resizeMode="contain"
         />
 
-        {/* PERCENTAGES */}
         <View style={styles.statsRow}>
           {ENERGY_LEVELS.map((item) => (
             <Text
@@ -73,7 +91,6 @@ export default function EnergySelector({
           ))}
         </View>
 
-        {/* BUTTONS */}
         <View style={styles.buttonRow}>
           {ENERGY_LEVELS.map((item) => (
             <TouchableOpacity
@@ -84,20 +101,27 @@ export default function EnergySelector({
                 {
                   backgroundColor: item.color,
                   borderWidth: selected === item.level ? 3 : 0,
-                  transform: [{ scale: selected === item.level ? 1.1 : 1 }],
+                  transform: [
+                    { scale: selected === item.level ? 1.1 : 1 },
+                  ],
                 },
               ]}
             />
           ))}
         </View>
 
-        {/* LABEL */}
         <Text style={[styles.status, { color: currentLevel.color }]}>
           {currentLevel.label}
         </Text>
 
-        {/* SAVE */}
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+        <TouchableOpacity
+          style={[
+            styles.saveBtn,
+            selected === value && { opacity: 0.5 },
+          ]}
+          disabled={selected === value}
+          onPress={handleSave}
+        >
           <Text style={styles.saveText}>Save Daily Energy</Text>
         </TouchableOpacity>
       </View>
@@ -107,14 +131,15 @@ export default function EnergySelector({
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,    
+    flex: 1,
     backgroundColor: "#0f0e0e",
     justifyContent: "center",
+    alignItems: "center",
   },
 
   card: {
+    width: "90%",
     backgroundColor: "#2c3946",
-    marginHorizontal: 20,
     borderRadius: 32,
     padding: 24,
     alignItems: "center",
@@ -135,6 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 2,
     marginBottom: 16,
+    color: "#000",
   },
 
   energyImage: {
