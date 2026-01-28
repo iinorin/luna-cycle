@@ -1,12 +1,22 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, SafeAreaView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { EnergyLevel } from "./energyTypes";
 import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 
-const ENERGY_META: Record<number, { label: string; percent: number; color: string; message: string }> = {
+const ENERGY_META: Record<
+  number,
+  { label: string; percent: number; color: string; message: string }
+> = {
   1: { label: "CRITICAL", percent: 20, color: "#ef4444", message: "Time to recharge and rest." },
   2: { label: "LOW", percent: 40, color: "#f97316", message: "Take it easy today." },
   3: { label: "BALANCED", percent: 60, color: "#facc15", message: "You're in a steady flow." },
@@ -18,8 +28,15 @@ export default function EnergySuccess() {
   const router = useRouter();
   const params = useLocalSearchParams();
   
-  // Get level from params (from the router) or default to 3
-  const level = Number(params.level || 3) as EnergyLevel;
+  const rawLevel = Array.isArray(params.level)
+    ? params.level[0]
+    : params.level;
+
+  const parsedLevel = Number(rawLevel);
+
+  const level: EnergyLevel =
+    parsedLevel >= 1 && parsedLevel <= 5 ? (parsedLevel as EnergyLevel) : 3;
+
   const meta = ENERGY_META[level];
 
   const handleHome = () => {
@@ -34,11 +51,14 @@ export default function EnergySuccess() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" />
-      
-      <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000"
+        translucent={false}
+      />
+
+      <View style={styles.container}>
         <View style={styles.card}>
-          
           {/* TOP BADGE */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>VIBE CAPTURED ✨</Text>
@@ -48,10 +68,10 @@ export default function EnergySuccess() {
 
           {/* MASSIVE PERCENTAGE */}
           <View style={styles.percentContainer}>
-             <Text style={[styles.percentText, { color: meta.color }]}>
-                {meta.percent}
-                <Text style={styles.percentSymbol}>%</Text>
-             </Text>
+            <Text style={[styles.percentText, { color: meta.color }]}>
+              {meta.percent}
+              <Text style={styles.percentSymbol}>%</Text>
+            </Text>
           </View>
 
           <Text style={[styles.statusLabel, { color: meta.color }]}>
@@ -60,7 +80,7 @@ export default function EnergySuccess() {
 
           <Text style={styles.message}>{meta.message}</Text>
 
-          {/* POLISHED BARS */}
+          {/* BARS */}
           <View style={styles.barRow}>
             {[1, 2, 3, 4, 5].map((i) => (
               <View
@@ -68,7 +88,7 @@ export default function EnergySuccess() {
                 style={[
                   styles.bar,
                   { backgroundColor: i <= level ? meta.color : "#e2e8f0" },
-                  i <= level && styles.activeBarShadow
+                  i <= level && styles.activeBarShadow,
                 ]}
               />
             ))}
@@ -83,7 +103,7 @@ export default function EnergySuccess() {
             <Text style={styles.secondaryText}>Edit Entry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -91,17 +111,17 @@ export default function EnergySuccess() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000", // Pure black background
+    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },
   container: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   card: {
     width: width * 0.9,
-    backgroundColor: "#fff", // Clean white card
+    backgroundColor: "#fff",
     borderRadius: 42,
     padding: 30,
     alignItems: "center",
@@ -132,8 +152,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   percentContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   percentText: {
     fontSize: 88,
@@ -192,6 +212,6 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     fontSize: 14,
     fontWeight: "700",
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
 });
