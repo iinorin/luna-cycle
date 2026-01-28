@@ -1,137 +1,197 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, SafeAreaView } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { EnergyLevel } from "./energyTypes";
+import * as Haptics from "expo-haptics";
 
-const ENERGY_META: Record<EnergyLevel, { label: string; percent: number; color: string }> = {
-  1: { label: "Critical", percent: 20, color: "#ef4444" },
-  2: { label: "Low", percent: 40, color: "#f97316" },
-  3: { label: "Balanced", percent: 60, color: "#facc15" },
-  4: { label: "High", percent: 80, color: "#84cc16" },
-  5: { label: "Full", percent: 100, color: "#22c55e" },
+const { width } = Dimensions.get("window");
+
+const ENERGY_META: Record<number, { label: string; percent: number; color: string; message: string }> = {
+  1: { label: "CRITICAL", percent: 20, color: "#ef4444", message: "Time to recharge and rest." },
+  2: { label: "LOW", percent: 40, color: "#f97316", message: "Take it easy today." },
+  3: { label: "BALANCED", percent: 60, color: "#facc15", message: "You're in a steady flow." },
+  4: { label: "HIGH", percent: 80, color: "#84cc16", message: "Productivity is your friend." },
+  5: { label: "FULL", percent: 100, color: "#22c55e", message: "You are unstoppable today!" },
 };
 
-export default function EnergySuccess({
-  level,
-  onEdit,
-  onHome,
-}: {
-  level: EnergyLevel;
-  onEdit: () => void;
-  onHome: () => void;
-}) {
+export default function EnergySuccess() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  // Get level from params (from the router) or default to 3
+  const level = Number(params.level || 3) as EnergyLevel;
   const meta = ENERGY_META[level];
+
+  const handleHome = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.replace("/(drawer)/(tabs)/cycle");
+  };
+
+  const handleEdit = () => {
+    Haptics.selectionAsync();
+    router.back();
+  };
 
   return (
     <View style={styles.root}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Energy Saved ✨</Text>
+      <StatusBar barStyle="light-content" />
+      
+      <SafeAreaView style={styles.container}>
+        <View style={styles.card}>
+          
+          {/* TOP BADGE */}
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>VIBE CAPTURED ✨</Text>
+          </View>
 
-        {/* Percentage */}
-        <Text style={[styles.percent, { color: meta.color }]}>
-          {meta.percent}%
-        </Text>
+          <Text style={styles.title}>Energy Level</Text>
 
-        <Text style={[styles.label, { color: meta.color }]}>
-          {meta.label}
-        </Text>
+          {/* MASSIVE PERCENTAGE */}
+          <View style={styles.percentContainer}>
+             <Text style={[styles.percentText, { color: meta.color }]}>
+                {meta.percent}
+                <Text style={styles.percentSymbol}>%</Text>
+             </Text>
+          </View>
 
-        {/* Bars */}
-        <View style={styles.barRow}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <View
-              key={i}
-              style={[
-                styles.bar,
-                {
-                  backgroundColor:
-                    i <= level ? meta.color : "#334155",
-                },
-              ]}
-            />
-          ))}
+          <Text style={[styles.statusLabel, { color: meta.color }]}>
+            {meta.label}
+          </Text>
+
+          <Text style={styles.message}>{meta.message}</Text>
+
+          {/* POLISHED BARS */}
+          <View style={styles.barRow}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <View
+                key={i}
+                style={[
+                  styles.bar,
+                  { backgroundColor: i <= level ? meta.color : "#e2e8f0" },
+                  i <= level && styles.activeBarShadow
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* BUTTONS */}
+          <TouchableOpacity style={styles.primaryBtn} onPress={handleHome}>
+            <Text style={styles.primaryText}>Back to Dashboard</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryBtn} onPress={handleEdit}>
+            <Text style={styles.secondaryText}>Edit Entry</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Buttons */}
-        <TouchableOpacity style={styles.primaryBtn} onPress={onHome}>
-          <Text style={styles.primaryText}>Go to Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.secondaryBtn} onPress={onEdit}>
-          <Text style={styles.secondaryText}>Edit Energy</Text>
-        </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#0f0e0e",
+    backgroundColor: "#000", // Pure black background
     justifyContent: "center",
     alignItems: "center",
   },
-
+  container: {
+    width: '100%',
+    alignItems: 'center',
+  },
   card: {
-    width: "90%",
-    backgroundColor: "#2c3946",
-    borderRadius: 32,
-    padding: 28,
+    width: width * 0.9,
+    backgroundColor: "#fff", // Clean white card
+    borderRadius: 42,
+    padding: 30,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
-
-  title: {
+  badge: {
+    backgroundColor: "#000",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 100,
+    marginBottom: 25,
+  },
+  badgeText: {
     color: "#fff",
-    fontSize: 22,
-    fontWeight: "800",
-    marginBottom: 20,
-  },
-
-  percent: {
-    fontSize: 64,
+    fontSize: 12,
     fontWeight: "900",
-    marginBottom: 8,
+    letterSpacing: 1,
   },
-
-  label: {
-    fontSize: 20,
+  title: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#94a3b8",
+    textTransform: "uppercase",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  percentContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  percentText: {
+    fontSize: 88,
+    fontWeight: "900",
+    letterSpacing: -4,
+  },
+  percentSymbol: {
+    fontSize: 32,
     fontWeight: "700",
-    marginBottom: 24,
   },
-
+  statusLabel: {
+    fontSize: 24,
+    fontWeight: "900",
+    marginTop: -10,
+    marginBottom: 10,
+  },
+  message: {
+    fontSize: 16,
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 35,
+    fontWeight: "500",
+  },
   barRow: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 32,
+    gap: 12,
+    marginBottom: 40,
   },
-
   bar: {
-    width: 18,
-    height: 70,
+    width: 14,
+    height: 50,
     borderRadius: 10,
   },
-
+  activeBarShadow: {
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
   primaryBtn: {
     backgroundColor: "#000",
     width: "100%",
-    paddingVertical: 16,
-    borderRadius: 18,
+    paddingVertical: 20,
+    borderRadius: 22,
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 15,
   },
-
   primaryText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
   },
-
   secondaryBtn: {
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
-
   secondaryText: {
     color: "#94a3b8",
     fontSize: 14,
     fontWeight: "700",
+    textDecorationLine: 'underline',
   },
 });
