@@ -1,1 +1,1 @@
-export { default } from "@/src/energy/EnergySelector";
+export { default } from "@/src/energy/EnergyController";

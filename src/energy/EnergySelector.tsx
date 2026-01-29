@@ -8,27 +8,28 @@ import {
   StatusBar,
 } from "react-native";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
 
 import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
 
+interface EnergySelectorProps {
+  value?: EnergyLevel; // The level from storage (if editing)
+  onSaveComplete: (level: EnergyLevel) => void; // Tell the Brain we are done
+}
+
 export default function EnergySelector({
   value,
-  onChange,
-}: {
-  value?: EnergyLevel;
-  onChange?: (level: EnergyLevel) => void;
-}) {
+  onSaveComplete,
+}: EnergySelectorProps) {
+  // Set initial state to the stored value or default to 3 (Balanced)
   const [selected, setSelected] = useState<EnergyLevel>(value ?? 3);
 
-  const router = useRouter();
-
- useEffect(() => {
-  if (value !== undefined) {
-    setSelected(value);
-  }
-}, [value]);
+  // Sync state if the value prop changes (e.g., when clicking "Edit")
+  useEffect(() => {
+    if (value !== undefined) {
+      setSelected(value);
+    }
+  }, [value]);
 
   const currentLevel =
     ENERGY_LEVELS.find((l) => l.level === selected) ?? ENERGY_LEVELS[2];
@@ -41,36 +42,27 @@ export default function EnergySelector({
   const handleSave = async () => {
     try {
       await saveEnergyForToday(selected);
-      onChange?.(selected);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Success
-      );
-
-      router.push({
-        pathname: "/energy/energy-success",
-        params: {
-          type: 'energy',
-          level: selected,
-          label: currentLevel.label
-        },
-      })
-
+      // ✅ CRITICAL: Instead of router.push, we call the parent callback
+      onSaveComplete(selected);
+      
     } catch (e) {
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   };
 
   return (
     <View style={styles.root}>
-      <StatusBar backgroundColor="#0f0e0e" barStyle="light-content" />
+      <StatusBar backgroundColor="#000" barStyle="light-content" />
 
       <View style={styles.card}>
-        <Text style={styles.question}>
-          Which of these defines you in your best energy levels?
-        </Text>
+        <View style={styles.badge}>
+           <Text style={styles.question}>
+            Which of these defines you in your best energy levels?
+          </Text>
+        </View>
 
         <Text style={styles.title}>Energy Mapping</Text>
 
@@ -105,7 +97,7 @@ export default function EnergySelector({
                   backgroundColor: item.color,
                   borderWidth: selected === item.level ? 3 : 0,
                   transform: [
-                    { scale: selected === item.level ? 1.1 : 1 },
+                    { scale: selected === item.level ? 1.15 : 1 },
                   ],
                 },
               ]}
@@ -120,10 +112,10 @@ export default function EnergySelector({
         <TouchableOpacity
           style={[
             styles.saveBtn,
+            // Disable only if the current selection matches what's already in storage
             selected === value && { opacity: 0.5 },
           ]}
-          disabled={value !== undefined && selected === value}
-
+          disabled={selected === value}
           onPress={handleSave}
         >
           <Text style={styles.saveText}>Save Daily Energy</Text>
@@ -136,83 +128,77 @@ export default function EnergySelector({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#0f0e0e",
+    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },
-
   card: {
     width: "90%",
-    backgroundColor: "#2c3946",
-    borderRadius: 32,
+    backgroundColor: "#fff", // Matches your premium white-on-black theme
+    borderRadius: 35,
     padding: 24,
     alignItems: "center",
   },
-
-  question: {
+  badge: {
     backgroundColor: "#000",
-    color: "#fff",
     padding: 16,
     borderRadius: 20,
+    marginBottom: 20,
+    width: '100%',
+  },
+  question: {
+    color: "#fff",
     textAlign: "center",
     fontWeight: "700",
-    marginBottom: 20,
+    fontSize: 14,
   },
-
   title: {
     fontSize: 12,
     fontWeight: "900",
     letterSpacing: 2,
     marginBottom: 16,
-    color: "#000",
+    color: "#64748b",
+    textTransform: 'uppercase',
   },
-
   energyImage: {
     height: 220,
     width: 120,
     marginBottom: 20,
   },
-
   statsRow: {
     flexDirection: "row",
     width: "100%",
     justifyContent: "space-between",
     marginBottom: 12,
   },
-
   percentText: {
     fontSize: 12,
     fontWeight: "900",
   },
-
   buttonRow: {
     flexDirection: "row",
     width: "100%",
     justifyContent: "space-between",
     marginBottom: 20,
   },
-
   colorButton: {
     width: 46,
     height: 46,
     borderRadius: 14,
     borderColor: "#000",
   },
-
   status: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 24,
+    fontWeight: "900",
     marginBottom: 24,
   },
-
   saveBtn: {
     backgroundColor: "#000",
     width: "100%",
-    paddingVertical: 16,
-    borderRadius: 18,
+    paddingVertical: 18,
+    borderRadius: 20,
     alignItems: "center",
   },
-
   saveText: {
     color: "#fff",
     fontSize: 16,

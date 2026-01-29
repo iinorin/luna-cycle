@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -11,60 +11,29 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { EnergyLevel } from "./energyTypes";
-import { loadTodayEnergy } from "./energyStorage";
 
 const { width } = Dimensions.get("window");
 
+// We keep this here for UI display mapping
 const ENERGY_META: Record<
   number,
   { label: string; percent: number; color: string; message: string }
 > = {
-  1: {
-    label: "CRITICAL",
-    percent: 20,
-    color: "#ef4444",
-    message: "Time to recharge and rest.",
-  },
-  2: {
-    label: "LOW",
-    percent: 40,
-    color: "#f97316",
-    message: "Take it easy today.",
-  },
-  3: {
-    label: "BALANCED",
-    percent: 60,
-    color: "#facc15",
-    message: "You're in a steady flow.",
-  },
-  4: {
-    label: "HIGH",
-    percent: 80,
-    color: "#84cc16",
-    message: "Productivity is your friend.",
-  },
-  5: {
-    label: "FULL",
-    percent: 100,
-    color: "#22c55e",
-    message: "You are unstoppable today!",
-  },
+  1: { label: "CRITICAL", percent: 20, color: "#ef4444", message: "Time to recharge and rest." },
+  2: { label: "LOW", percent: 40, color: "#f97316", message: "Take it easy today." },
+  3: { label: "BALANCED", percent: 60, color: "#facc15", message: "You're in a steady flow." },
+  4: { label: "HIGH", percent: 80, color: "#84cc16", message: "Productivity is your friend." },
+  5: { label: "FULL", percent: 100, color: "#22c55e", message: "You are unstoppable today!" },
 };
 
-export default function EnergySuccess() {
+// Define what props this component expects from the Controller
+interface EnergySuccessProps {
+  level: EnergyLevel;
+  onEdit: () => void;
+}
+
+export default function EnergySuccess({ level, onEdit }: EnergySuccessProps) {
   const router = useRouter();
-  const [level, setLevel] = useState<EnergyLevel | null>(null);
-
-  useEffect(() => {
-    loadTodayEnergy().then((entry) => {
-      if (entry?.level) {
-        setLevel(entry.level as EnergyLevel);
-      }
-    });
-  }, []);
-
-  if (!level) return null;
-
   const meta = ENERGY_META[level];
 
   const handleHome = () => {
@@ -72,9 +41,9 @@ export default function EnergySuccess() {
     router.replace("/(drawer)/(tabs)/cycle");
   };
 
-  const handleEdit = () => {
+  const handleEditPress = () => {
     Haptics.selectionAsync();
-    router.replace("./(drawer)/(tabs)/energyBar");
+    onEdit(); // This triggers the state change in EnergyController
   };
 
   return (
@@ -83,14 +52,12 @@ export default function EnergySuccess() {
 
       <View style={styles.container}>
         <View style={styles.card}>
-          {/* TOP BADGE */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>VIBE CAPTURED ✨</Text>
           </View>
 
           <Text style={styles.title}>Energy Level</Text>
 
-          {/* PERCENT */}
           <View style={styles.percentContainer}>
             <Text style={[styles.percentText, { color: meta.color }]}>
               {meta.percent}
@@ -104,7 +71,6 @@ export default function EnergySuccess() {
 
           <Text style={styles.message}>{meta.message}</Text>
 
-          {/* BARS */}
           <View style={styles.barRow}>
             {[1, 2, 3, 4, 5].map((i) => (
               <View
@@ -118,12 +84,11 @@ export default function EnergySuccess() {
             ))}
           </View>
 
-          {/* BUTTONS */}
           <TouchableOpacity style={styles.primaryBtn} onPress={handleHome}>
             <Text style={styles.primaryText}>Back to Dashboard</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryBtn} onPress={handleEdit}>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={handleEditPress}>
             <Text style={styles.secondaryText}>Edit Entry</Text>
           </TouchableOpacity>
         </View>
@@ -131,8 +96,6 @@ export default function EnergySuccess() {
     </View>
   );
 }
-
-/* ---------------- STYLES ---------------- */
 
 const styles = StyleSheet.create({
   root: {
@@ -151,9 +114,6 @@ const styles = StyleSheet.create({
     borderRadius: 42,
     padding: 30,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
     elevation: 10,
   },
   badge: {
