@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   Dimensions,
   StatusBar,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { EnergyLevel } from "./energyTypes";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+
+import { EnergyLevel } from "./energyTypes";
+import { loadTodayEnergy } from "./energyStorage";
 
 const { width } = Dimensions.get("window");
 
@@ -17,25 +19,51 @@ const ENERGY_META: Record<
   number,
   { label: string; percent: number; color: string; message: string }
 > = {
-  1: { label: "CRITICAL", percent: 20, color: "#ef4444", message: "Time to recharge and rest." },
-  2: { label: "LOW", percent: 40, color: "#f97316", message: "Take it easy today." },
-  3: { label: "BALANCED", percent: 60, color: "#facc15", message: "You're in a steady flow." },
-  4: { label: "HIGH", percent: 80, color: "#84cc16", message: "Productivity is your friend." },
-  5: { label: "FULL", percent: 100, color: "#22c55e", message: "You are unstoppable today!" },
+  1: {
+    label: "CRITICAL",
+    percent: 20,
+    color: "#ef4444",
+    message: "Time to recharge and rest.",
+  },
+  2: {
+    label: "LOW",
+    percent: 40,
+    color: "#f97316",
+    message: "Take it easy today.",
+  },
+  3: {
+    label: "BALANCED",
+    percent: 60,
+    color: "#facc15",
+    message: "You're in a steady flow.",
+  },
+  4: {
+    label: "HIGH",
+    percent: 80,
+    color: "#84cc16",
+    message: "Productivity is your friend.",
+  },
+  5: {
+    label: "FULL",
+    percent: 100,
+    color: "#22c55e",
+    message: "You are unstoppable today!",
+  },
 };
 
 export default function EnergySuccess() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  
-  const rawLevel = Array.isArray(params.level)
-    ? params.level[0]
-    : params.level;
+  const [level, setLevel] = useState<EnergyLevel | null>(null);
 
-  const parsedLevel = Number(rawLevel);
+  useEffect(() => {
+    loadTodayEnergy().then((entry) => {
+      if (entry?.level) {
+        setLevel(entry.level as EnergyLevel);
+      }
+    });
+  }, []);
 
-  const level: EnergyLevel =
-    parsedLevel >= 1 && parsedLevel <= 5 ? (parsedLevel as EnergyLevel) : 3;
+  if (!level) return null;
 
   const meta = ENERGY_META[level];
 
@@ -46,16 +74,12 @@ export default function EnergySuccess() {
 
   const handleEdit = () => {
     Haptics.selectionAsync();
-    router.back();
+    router.replace("./(drawer)/(tabs)/energyBar");
   };
 
   return (
     <View style={styles.root}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#000"
-        translucent={false}
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
 
       <View style={styles.container}>
         <View style={styles.card}>
@@ -66,7 +90,7 @@ export default function EnergySuccess() {
 
           <Text style={styles.title}>Energy Level</Text>
 
-          {/* MASSIVE PERCENTAGE */}
+          {/* PERCENT */}
           <View style={styles.percentContainer}>
             <Text style={[styles.percentText, { color: meta.color }]}>
               {meta.percent}
@@ -107,6 +131,8 @@ export default function EnergySuccess() {
     </View>
   );
 }
+
+/* ---------------- STYLES ---------------- */
 
 const styles = StyleSheet.create({
   root: {
