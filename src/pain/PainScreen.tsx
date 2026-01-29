@@ -5,136 +5,104 @@ import {
   Pressable,
   Animated,
   Image,
+  Easing,
 } from "react-native";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle2, AlertTriangle, Trash2 } from "lucide-react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import * as Haptics from "expo-haptics";
 
 import {
-  loadTodayPain,
   savePainForToday,
   clearPainData,
   PainSelection,
 } from "./painDailyStorage";
 
-export default function PainScreen() {
-  const router = useRouter();
+interface PainScreenProps {
+  onSelectPain: () => void;
+  initialValue?: any;
+}
 
-  const [selected, setSelected] = useState<PainSelection | null>(null);
-  const [saved, setSaved] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+export default function PainScreen({ onSelectPain, initialValue }: PainScreenProps) {
+  const [selected, setSelected] = useState<PainSelection | null>(initialValue);
+  const [saved, setSaved] = useState(initialValue !== null);
 
+  // --- ANIMATIONS ---
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const scaleNoPain = useRef(new Animated.Value(1)).current;
   const scalePain = useRef(new Animated.Value(1)).current;
 
-  /**
-   * 🧠 INITIAL HYDRATION (runs ONCE)
-   */
   useEffect(() => {
-    (async () => {
-      const value = await loadTodayPain();
+    // Entrance Animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
 
-      if (value) {
-        setSelected(value);
-        setSaved(true);
-      }
-
-      setHydrated(true);
-    })();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.04,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
-
-  /**
-   * 🔁 FOCUS-BASED REDIRECT (drawer / tab / back)
-   */
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-
-      const checkRedirect = async () => {
-        const value = await loadTodayPain();
-
-        if (!active) return;
-
-        if (value === "pain") {
-          router.replace("/pain/details");
-        }
-      };
-
-      checkRedirect();
-
-      return () => {
-        active = false;
-      };
-    }, [])
-  );
 
   const animatePress = (scale: Animated.Value) => {
     Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 0.94,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
+      Animated.timing(scale, { toValue: 0.92, duration: 100, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
   };
 
-  /**
-   * 💾 SAVE FOR TODAY
-   */
   const handleSave = async () => {
     if (!selected) return;
-
     await savePainForToday(selected);
     setSaved(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    if (selected === "pain") {
-      router.push("/pain/details");
+    // Tell the "Brain" we are moving to the next step
+    if (selected === 'pain') {
+      onSelectPain();
     }
   };
 
-  /**
-   * 🗑 DELETE TODAY'S LOG
-   */
+
   const handleDeleteTodayLog = async () => {
     await clearPainData();
     setSelected(null);
     setSaved(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   };
 
-  const isSaveEnabled = selected !== null && !saved;
-
-  // ⛔ Prevent UI flicker before hydration
-  if (!hydrated) {
-    return <View style={{ flex: 1, backgroundColor: "#000000" }} />;
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient
-        colors={["#1f2937", "#000000"]}
-        style={styles.headerCard}
-      >
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <LinearGradient colors={["#1f2937", "#000000"]} style={styles.headerCard}>
         <Text style={styles.headerTitle}>Pain Today</Text>
         <Text style={styles.headerSubtitle}>
           {saved ? "Already logged for today" : "Let us know how you feel"}
         </Text>
       </LinearGradient>
 
-      {/* Selection Icons */}
       <View style={styles.iconRow}>
-        {/* No Pain */}
+        {/* NO PAIN OPTION */}
         <Pressable
           disabled={saved}
           onPress={() => {
             setSelected("none");
             animatePress(scaleNoPain);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           }}
         >
           <Animated.View
@@ -142,30 +110,21 @@ export default function PainScreen() {
               styles.iconWrapper,
               selected === "none" && styles.activeNoPain,
               saved && styles.locked,
-              { transform: [{ scale: scaleNoPain }] },
+              { transform: [{ scale: selected === "none" ? pulseAnim : scaleNoPain }] },
             ]}
           >
-            <CheckCircle2
-              size={52}
-              color={selected === "none" ? "#22c55e" : "#9ca3af"}
-            />
-            <Text
-              style={[
-                styles.iconLabel,
-                selected === "none" && styles.activeLabel,
-              ]}
-            >
-              No Pain
-            </Text>
+            <CheckCircle2 size={52} color={selected === "none" ? "#22c55e" : "#9ca3af"} />
+            <Text style={[styles.iconLabel, selected === "none" && styles.activeLabel]}>No Pain</Text>
           </Animated.View>
         </Pressable>
 
-        {/* Pain */}
+        {/* PAIN OPTION */}
         <Pressable
           disabled={saved}
           onPress={() => {
             setSelected("pain");
             animatePress(scalePain);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }}
         >
           <Animated.View
@@ -173,190 +132,62 @@ export default function PainScreen() {
               styles.iconWrapper,
               selected === "pain" && styles.activePain,
               saved && styles.locked,
-              { transform: [{ scale: scalePain }] },
+              { transform: [{ scale: selected === "pain" ? pulseAnim : scalePain }] },
             ]}
           >
-            <AlertTriangle
-              size={52}
-              color={selected === "pain" ? "#ef4444" : "#9ca3af"}
-            />
-            <Text
-              style={[
-                styles.iconLabel,
-                selected === "pain" && styles.activeLabel,
-              ]}
-            >
-              Pain
-            </Text>
+            <AlertTriangle size={52} color={selected === "pain" ? "#ef4444" : "#9ca3af"} />
+            <Text style={[styles.iconLabel, selected === "pain" && styles.activeLabel]}>Pain</Text>
           </Animated.View>
         </Pressable>
       </View>
 
-      {/* Save Button */}
       <Pressable
-        disabled={!isSaveEnabled}
-        style={[
-          styles.saveButton,
-          isSaveEnabled ? styles.saveActive : styles.saveDisabled,
-        ]}
+        disabled={selected === null || saved}
+        style={[styles.saveButton, selected !== null && !saved ? styles.saveActive : styles.saveDisabled]}
         onPress={handleSave}
       >
-        <Text style={styles.saveText}>
-          {saved ? "Saved for today" : "Save"}
-        </Text>
+        <Text style={styles.saveText}>{saved ? "Saved for today" : "Continue"}</Text>
       </Pressable>
 
-      {/* Delete Today Log */}
       {saved && (
-        <Pressable
-          style={styles.deleteButton}
-          onPress={handleDeleteTodayLog}
-        >
+        <Pressable style={styles.deleteButton} onPress={handleDeleteTodayLog}>
           <Trash2 size={18} color="#f87171" />
           <Text style={styles.deleteText}>Delete today log</Text>
         </Pressable>
       )}
 
-      {/* No Pain Message */}
       {saved && selected === "none" && (
         <View style={styles.noPainContainer}>
-          <View style={styles.noPainTitleRow}>
-            <Text style={styles.noPainTitle}>Yay! No pain today</Text>
-            <Text style={styles.noPainEmoji}>💖</Text>
-          </View>
-
-          <Text style={styles.noPainSubtitle}>
-            Hope it stays this way — take care of yourself
-          </Text>
-
+          <Text style={styles.noPainTitle}>Yay! No pain today 💖</Text>
           <Image
-            source={{
-              uri: "https://media1.tenor.com/m/mufcZq84L18AAAAd/pain-go-away.gif",
-            }}
+            source={{ uri: "https://media1.tenor.com/m/mufcZq84L18AAAAd/pain-go-away.gif" }}
             style={styles.noPainGif}
           />
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
-/* ---------------- STYLES (UNCHANGED) ---------------- */
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#000000",
-  },
-  headerCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 40,
-    marginTop: 70,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  headerSubtitle: {
-    marginTop: 6,
-    fontSize: 14,
-    color: "#9ca3af",
-  },
-  iconRow: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    marginBottom: 50,
-  },
-  iconWrapper: {
-    width: 140,
-    height: 140,
-    borderRadius: 20,
-    backgroundColor: "#111827",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconLabel: {
-    marginTop: 12,
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#9ca3af",
-  },
-  activeNoPain: {
-    backgroundColor: "#052e16",
-    borderWidth: 1,
-    borderColor: "#22c55e",
-  },
-  activePain: {
-    backgroundColor: "#450a0a",
-    borderWidth: 1,
-    borderColor: "#ef4444",
-  },
-  activeLabel: {
-    color: "#ffffff",
-  },
-  locked: {
-    opacity: 0.5,
-  },
-  saveButton: {
-    height: 52,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  saveActive: {
-    backgroundColor: "#ec4899",
-  },
-  saveDisabled: {
-    backgroundColor: "#1f2937",
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  deleteButton: {
-    marginTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  deleteText: {
-    fontSize: 14,
-    color: "#f87171",
-    fontWeight: "600",
-  },
-  noPainContainer: {
-    marginTop: 30,
-    alignItems: "center",
-  },
-  noPainTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  noPainTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  noPainEmoji: {
-    fontSize: 20,
-  },
-  noPainSubtitle: {
-    fontSize: 14,
-    color: "#9ca3af",
-    marginBottom: 16,
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  noPainGif: {
-    width: 200,
-    height: 200,
-    borderRadius: 16,
-  },
+  container: { flex: 1, padding: 20, backgroundColor: "#000000" },
+  headerCard: { borderRadius: 25, padding: 25, marginBottom: 40, marginTop: 60 },
+  headerTitle: { fontSize: 24, fontWeight: "900", color: "#ffffff" },
+  headerSubtitle: { marginTop: 6, fontSize: 14, color: "#9ca3af" },
+  iconRow: { flexDirection: "row", justifyContent: "space-evenly", marginBottom: 50 },
+  iconWrapper: { width: 150, height: 160, borderRadius: 28, backgroundColor: "#111827", justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: 'transparent' },
+  iconLabel: { marginTop: 15, fontSize: 16, fontWeight: "800", color: "#9ca3af" },
+  activeNoPain: { backgroundColor: "#052e16", borderWidth: 2, borderColor: "#22c55e" },
+  activePain: { backgroundColor: "#450a0a", borderWidth: 2, borderColor: "#ef4444" },
+  activeLabel: { color: "#ffffff" },
+  locked: { opacity: 0.6 },
+  saveButton: { height: 60, borderRadius: 20, justifyContent: "center", alignItems: "center" },
+  saveActive: { backgroundColor: "#ec4899" },
+  saveDisabled: { backgroundColor: "#1f2937" },
+  saveText: { fontSize: 18, fontWeight: "900", color: "#ffffff" },
+  deleteButton: { marginTop: 25, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  deleteText: { fontSize: 14, color: "#f87171", fontWeight: "700" },
+  noPainContainer: { marginTop: 30, alignItems: "center" },
+  noPainTitle: { fontSize: 20, fontWeight: "800", color: "#ffffff", marginBottom: 15 },
+  noPainGif: { width: 220, height: 220, borderRadius: 25 },
 });

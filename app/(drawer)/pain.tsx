@@ -1,1 +1,1 @@
-export { default } from "@/src/pain/PainScreen";
+export { default } from "@/src/pain/PainController";
