@@ -13,7 +13,7 @@ import { ENERGY_LEVELS, EnergyLevel } from "./energyTypes";
 import { saveEnergyForToday } from "./energyStorage";
 
 interface EnergySelectorProps {
-  value?: EnergyLevel; // The level from storage (if editing)
+  value?: EnergyLevel; 
   onSaveComplete: (level: EnergyLevel) => void; // Tell the Brain we are done
 }
 
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "90%",
-    backgroundColor: "#fff", // Matches your premium white-on-black theme
+    backgroundColor: "#fff",
     borderRadius: 35,
     padding: 24,
     alignItems: "center",
