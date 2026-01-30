@@ -10,8 +10,9 @@ export interface FoodItem {
   name: string;
   icon: string;
   benefit: string;
-  category: "Iron" | "Magnesium" | "Healthy Fats" | "Fiber" | "Antioxidants";
+  category: "Iron" | "Magnesium" | "Healthy Fats" | "Fiber" | "Comfort" | "Drinks";
   recommendedPhase: CyclePhase[];
+    tip?: string;
 }
 
 export const foodSuggestions: FoodItem[] = [
@@ -44,7 +45,7 @@ export const foodSuggestions: FoodItem[] = [
     name: "Berries",
     icon: "🫐",
     benefit: "Antioxidants for egg health & skin",
-    category: "Antioxidants",
+    category: "Fiber",
     recommendedPhase: ["ovulation", "safe"],
   },
   {
@@ -62,7 +63,90 @@ export const foodSuggestions: FoodItem[] = [
     benefit: "B-Vitamins for steady energy",
     category: "Fiber",
     recommendedPhase: ["luteal", "follicular"],
+  },
+  {
+    id: "7",
+    name: "Eggs",
+    icon: "🥚",
+    benefit: "Protein and healthy fats for hormone production",
+    category: "Healthy Fats",
+    recommendedPhase: ["follicular", "ovulation", "safe"],
+  },
+  {
+    id: "8",
+    name: "Ginger Tea",
+    icon: "☕",
+    benefit: "Anti-inflammatory to reduce period pain",
+    category: "Magnesium",
+    recommendedPhase: ["menstrual", "luteal"],
+  },
+  {
+    id: "9",
+    name: "Oats",
+    icon: "🥣",
+    benefit: "High fiber to help liver clear excess estrogen",
+    category: "Fiber",
+    recommendedPhase: ["ovulation", "follicular"],
+  },
+  {
+    id: "10",
+    name: "Sweet Potato",
+    icon: "🍠",
+    benefit: "Vitamin A for progesterone support",
+    category: "Fiber",
+    recommendedPhase: ["luteal"],
+  },
+  {
+    id: "11",
+    name: "Pumpkin Seeds",
+    icon: "🎃",
+    benefit: "Zinc and magnesium for mood and cramps",
+    category: "Magnesium",
+    recommendedPhase: ["luteal", "menstrual"],
+  },
+  {
+    id: "12",
+    name: "Golden Waffles",
+    icon: "🧇",
+    benefit: "Mood-boosting comfort carbs",
+    category: "Comfort",
+    recommendedPhase: ["luteal", "menstrual"],
+    tip: "Top with berries to help with bloating!"
+  },
+  {
+    id: "13",
+    name: "Fruit Ice Cream",
+    icon: "🍦",
+    benefit: "Cooling relief for inflammation",
+    category: "Comfort",
+    recommendedPhase: ["ovulation", "luteal"],
+    tip: "Try dairy-free to avoid extra cramps."
+  },
+  {
+    id: "14",
+    name: "Herbal Tea",
+    icon: "🍵",
+    benefit: "Hydration & muscle relaxation",
+    category: "Drinks",
+    recommendedPhase: ["menstrual", "luteal", "follicular", "ovulation", "safe"],
+  },
+  {
+    id: "15",
+    name: "Berry Smoothie",
+    icon: "🥤",
+    benefit: "Fiber surge for estrogen detox",
+    category: "Drinks",
+    recommendedPhase: ["ovulation", "follicular"],
+  },
+  {
+    id: "16",
+    name: "Warm Lemon Water",
+    icon: "🍋",
+    benefit: "Cleanses system & reduces bloating",
+    category: "Drinks",
+    recommendedPhase: ["menstrual", "safe"],
   }
+
 ];
 
 export const phaseFoodLogic: Record<CyclePhase, { title: string; focus: string }> = {
