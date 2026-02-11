@@ -66,4 +66,25 @@ meta: {
   color: "#cbd5e1",
   lineHeight: 20,
 },
+
+rowBetween: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+trendBadge: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: 'rgba(251, 113, 133, 0.15)', // Light red/rose tint
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 12,
+},
+trendText: {
+  color: '#fb7185',
+  fontSize: 12,
+  fontWeight: 'bold',
+  marginLeft: 4,
+},
+
 });
