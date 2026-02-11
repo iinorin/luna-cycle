@@ -62,3 +62,5 @@ const BleedingDistributionChart: React.FC<BleedingDistributionProps> = ({
 };
 
 export default React.memo(BleedingDistributionChart);
+
+// pie
