@@ -51,4 +51,19 @@ export default StyleSheet.create({
     backgroundColor: "#ec4899",
     borderRadius: 10,
   },
+
+  glassCard: {
+  backgroundColor: "rgba(139, 92, 246, 0.15)", // Subtle purple tint
+  borderColor: "rgba(139, 92, 246, 0.3)",
+},
+phaseText: {
+  fontSize: 15,
+  fontWeight: "600",
+  color: "#ddd6fe",
+},
+meta: {
+  fontSize: 14,
+  color: "#cbd5e1",
+  lineHeight: 20,
+},
 });
