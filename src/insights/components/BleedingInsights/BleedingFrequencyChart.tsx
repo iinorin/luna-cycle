@@ -1,74 +1,67 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, Text, Dimensions } from "react-native";
 import { BarChart } from "react-native-chart-kit";
-import type { ChartConfig } from "react-native-chart-kit/dist/HelperTypes";
 import styles from "@/src/insights/components/styles";
 
 const screenWidth = Dimensions.get("window").width;
 
 interface BleedingFrequencyProps {
-  months: string[]; // Format: ["2024-01", "2024-02"]
-  scores: number[];
-  chartConfig: ChartConfig;
+  labels: string[];
+  values: number[];
 }
 
 const BleedingFrequencyChart: React.FC<BleedingFrequencyProps> = ({
-  months,
-  scores,
-  chartConfig,
+  labels,
+  values,
 }) => {
-  const { displayMonths, displayScores } = useMemo(() => {
-    const paired = months.map((month, index) => ({
-      month,
-      score: scores[index] ?? 0,
-    }));
-
-    const lastSix = paired.slice(-6);
-
-    return {
-      displayMonths: lastSix.map(({ month }) => {
-        const monthIndex = parseInt(month.split("-")[1]) - 1;
-        return new Intl.DateTimeFormat("en", { month: "short" }).format(
-          new Date(2000, monthIndex)
-        );
-      }),
-      displayScores: lastSix.map(({ score }) => score),
-    };
-  }, [months, scores]);
-
-  const hasHistory = displayScores.length > 0;
+  const hasHistory =
+    labels.length > 0 && values.length > 0 && values.some((v) => v > 0);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>
-        📊 Flow Frequency by Month
-      </Text>
+      <Text style={styles.cardTitle}>📊 Flow Frequency by Month</Text>
 
       {hasHistory ? (
         <BarChart
           data={{
-            labels: displayMonths,
-            datasets: [{ data: displayScores }],
+            labels,
+            datasets: [
+              {
+                data: values,
+              },
+            ],
           }}
           width={screenWidth - 64}
-          height={200}
+          height={220}
           fromZero
           showValuesOnTopOfBars
+          yAxisLabel=""   // Required by types
+          yAxisSuffix=""  // Required by types
           chartConfig={{
-            ...chartConfig,
-            fillShadowGradient: "#fb7185",
+            backgroundGradientFrom: "#1E1E1E",
+            backgroundGradientTo: "#1E1E1E",
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(255, 105, 180, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(203, 213, 225, ${opacity})`,
+            fillShadowGradient: "#FF69B4",
             fillShadowGradientOpacity: 1,
             barPercentage: 0.6,
+            propsForBackgroundLines: {
+              stroke: "#2A2A2A",
+            },
           }}
-          style={styles.chart}
+          style={{
+            marginTop: 16,
+            borderRadius: 16,
+          }}
         />
       ) : (
         <Text style={styles.emptyText}>
-          No monthly history recorded yet 📉
+          No bleeding history available yet 🩸
         </Text>
       )}
     </View>
   );
 };
 
-export default React.memo(BleedingFrequencyChart);
+export default BleedingFrequencyChart;
