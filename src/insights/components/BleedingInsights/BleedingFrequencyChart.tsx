@@ -50,10 +50,9 @@ const BleedingFrequencyChart: React.FC<BleedingFrequencyProps> = ({
               stroke: "#2A2A2A",
             },
           }}
-          style={{
-            marginTop: 16,
-            borderRadius: 16,
-          }}
+
+          style={styles.chart}
+
         />
       ) : (
         <Text style={styles.emptyText}>
