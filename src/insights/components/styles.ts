@@ -97,4 +97,10 @@ emptyText: {
   marginVertical: 40, // Gives space when there's no chart
 },
 
+chart: {
+  marginVertical: 8,
+  borderRadius: 16,
+  paddingRight: 40, 
+},
+
 });
