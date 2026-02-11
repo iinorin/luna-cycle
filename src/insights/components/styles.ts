@@ -90,5 +90,11 @@ largeValue: {
   fontSize: 24,
 },
 
+emptyText: {
+  color: "#64748b", // Slate-500
+  fontSize: 13,
+  textAlign: "center",
+  marginVertical: 40, // Gives space when there's no chart
+},
 
 });
