@@ -86,5 +86,9 @@ trendText: {
   fontWeight: 'bold',
   marginLeft: 4,
 },
+largeValue: {
+  fontSize: 24,
+},
+
 
 });
